@@ -1,11 +1,3 @@
--- Query to check items inserted from table --
-SELECT COUNT(*) FROM order_items;
-
-SELECT bill_id, total_bill FROM bills ORDER BY bill_date, bill_time
-LIMIT 100;
-
-SELECT COUNT(*) FROM bills;
-
 -- Populate cuisines table
 INSERT INTO cuisines VALUES ('Indonesian');
 INSERT INTO cuisines VALUES ('German');
