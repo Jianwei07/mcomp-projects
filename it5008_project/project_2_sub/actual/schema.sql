@@ -39,7 +39,6 @@ CREATE TABLE staff_can_prepare (
 );
 
 -- registration 
-
 CREATE TABLE registration (
   phone      TEXT PRIMARY KEY,
   first_name TEXT NOT NULL,
