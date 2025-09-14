@@ -1,3 +1,14 @@
+-- insert menu
+INSERT INTO menu (Item, Price, Cuisine) VALUES ('Rendang', '4.0', 'Indonesian');
+INSERT INTO menu (Item, Price, Cuisine) VALUES ('Ayam Balado', '4.0', 'Indonesian');
+INSERT INTO menu (Item, Price, Cuisine) VALUES ('Gudeg', '3.0', 'Indonesian');
+INSERT INTO menu (Item, Price, Cuisine) VALUES ('Rinderrouladen', '3.5', 'German');
+INSERT INTO menu (Item, Price, Cuisine) VALUES ('Sauerbraten', '4.0', 'German');
+INSERT INTO menu (Item, Price, Cuisine) VALUES ('Bun Cha', '3.0', 'Vietnamese');
+INSERT INTO menu (Item, Price, Cuisine) VALUES ('Thunder Tea Rice', '2.5', 'Chinese');
+INSERT INTO menu (Item, Price, Cuisine) VALUES ('Palak Paneer', '4.0', 'Indian');
+
+-- insert staff
 INSERT INTO staff (Staff, Name, Cuisine) VALUES ('STAFF-01', 'Kat', 'Indonesian');
 INSERT INTO staff (Staff, Name, Cuisine) VALUES ('STAFF-01', 'Kat', 'German');
 INSERT INTO staff (Staff, Name, Cuisine) VALUES ('STAFF-02', 'Kat', 'German');
@@ -38,3 +49,9 @@ INSERT INTO staff (Staff, Name, Cuisine) VALUES ('STAFF-12', 'Gerion', 'Vietname
 INSERT INTO staff (Staff, Name, Cuisine) VALUES ('STAFF-12', 'Gerion', 'Chinese');
 INSERT INTO staff (Staff, Name, Cuisine) VALUES ('STAFF-12', 'Gerion', 'Indian');
 
+-- insert cuisines
+INSERT INTO staff (Cuisine) VALUES ('Indonesian');
+INSERT INTO staff (Cuisine) VALUES ('German');
+INSERT INTO staff (Cuisine) VALUES ('German');
+INSERT INTO staff (Cuisine) VALUES ('Chinese');
+INSERT INTO staff (Cuisine) VALUES ('Vietnamese');
