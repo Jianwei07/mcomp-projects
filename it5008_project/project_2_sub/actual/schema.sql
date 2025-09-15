@@ -9,6 +9,11 @@ DROP TABLE IF EXISTS registration CASCADE;
 DROP TABLE IF EXISTS menu CASCADE;
 DROP TABLE IF EXISTS cuisines CASCADE;
 
+-- cuisine
+CREATE TABLE cuisines (
+  cuisine_name TEXT PRIMARY KEY
+);
+
 -- menu 
 CREATE TABLE menu (
   item         TEXT PRIMARY KEY,
@@ -16,13 +21,10 @@ CREATE TABLE menu (
   cuisine_name TEXT NOT NULL REFERENCES cuisines(cuisine_name) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE TABLE cuisines (
-  cuisine_name TEXT PRIMARY KEY
-);
 
 CREATE TABLE menu_belongs_to (
-  item         TEXT NOT NULL REFERENCES menu(item) ON UPDATE CASCADE ON DELETE RESTRICT
-  cuisine_name TEXT NOT NULL REFERENCES cuisines(cuisine_name) ON UPDATE CASCADE ON DELETE RESTRICT
+  item         TEXT NOT NULL REFERENCES menu(item) ON UPDATE CASCADE ON DELETE RESTRICT,
+  cuisine_name TEXT NOT NULL REFERENCES cuisines(cuisine_name) ON UPDATE CASCADE ON DELETE RESTRICT,
   PRIMARY KEY (item, cuisine_name)
 );
 
@@ -48,19 +50,25 @@ CREATE TABLE registration (
   CHECK (phone ~ '^[0-9]{8}$')
 );
 
--- Registration Bridge
-CREATE TABLE registration_membership (
-  phone      TEXT REFERENCES registration(phone) ON UPDATE CASCADE ON DELETE RESTRICT,
-  orders_id  VARCHAR(11) NOT NULL REFERENCES orders(orders_id) ON UPDATE CASCADE ON DELETE CASCADE,
-  PRIMARY KEY (phone, orders_id)
-);
-
 -- order header - order unique
 CREATE TABLE orders (
   orders_id    VARCHAR(11) PRIMARY KEY,
   orders_date  DATE NOT NULL,
   orders_time  TIME NOT NULL,
-  payment    TEXT NOT NULL CHECK (payment IN ('cash','card')),
+  payment    TEXT NOT NULL CHECK (payment IN ('cash','card'))
+);
+
+-- payment split
+CREATE TABLE payment_card (
+  card_number TEXT PRIMARY KEY,
+  card_type   TEXT NOT NULL CHECK (card_type IN ('visa','mastercard','americanexpress')) 
+);
+
+-- Registration Bridge
+CREATE TABLE registration_membership (
+  phone      TEXT REFERENCES registration(phone) ON UPDATE CASCADE ON DELETE RESTRICT,
+  orders_id  VARCHAR(11) NOT NULL REFERENCES orders(orders_id) ON UPDATE CASCADE ON DELETE CASCADE,
+  PRIMARY KEY (phone, orders_id)
 );
 
 -- card(s) used for an order (bridge)
@@ -70,17 +78,11 @@ CREATE TABLE orders_paid_by_card (
   PRIMARY KEY (orders_id, card_number)
 );
 
--- payment split
-CREATE TABLE payment_card (
-  card_number TEXT PRIMARY KEY,
-  card_type   TEXT NOT NULL CHECK (card_type IN ('visa','mastercard','americanexpress')) 
-);
-
 -- order detail lines - for order duplicates
 CREATE TABLE order_items (
-  order_no        INTEGER CHECK (NUMBER > 0),
+  order_no        INTEGER CHECK (order_no > 0),
   orders_id       VARCHAR(11) NOT NULL REFERENCES orders(orders_id) ON UPDATE CASCADE ON DELETE CASCADE,
   item            TEXT NOT NULL REFERENCES menu(item) ON UPDATE CASCADE ON DELETE RESTRICT,
   staff_id        TEXT NOT NULL REFERENCES staff(staff_id) ON UPDATE CASCADE ON DELETE RESTRICT,
-  PRIMARY KEY (order_no, orders_id),
+  PRIMARY KEY (order_no, orders_id)
 );
