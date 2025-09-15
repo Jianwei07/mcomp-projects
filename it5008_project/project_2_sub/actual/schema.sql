@@ -1,13 +1,15 @@
 -- reset (order matters due to FKs)
+DROP TABLE IF EXISTS registration_membership CASCADE;
 DROP TABLE IF EXISTS orders_paid_by_card CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS payment_card CASCADE;
 DROP TABLE IF EXISTS staff_can_prepare CASCADE;
 DROP TABLE IF EXISTS staff CASCADE;
-DROP TABLE IF EXISTS registration CASCADE;
+DROP TABLE IF EXISTS menu_belongs_to CASCADE;
 DROP TABLE IF EXISTS menu CASCADE;
 DROP TABLE IF EXISTS cuisines CASCADE;
+DROP TABLE IF EXISTS registration CASCADE;
 
 -- cuisine
 CREATE TABLE cuisines (
