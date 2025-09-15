@@ -1,3 +1,5 @@
+-- Select Query
+
 -- Data for table: cuisines
 INSERT INTO cuisines (cuisine_name) VALUES ('Indonesian');
 INSERT INTO cuisines (cuisine_name) VALUES ('German');
