@@ -2152,14 +2152,14 @@ INSERT INTO registration (phone, first_name, last_name, reg_date, reg_time) VALU
 INSERT INTO registration (phone, first_name, last_name, reg_date, reg_time) VALUES ('93263252', 'Arlin', 'Pawlowicz', '2025-03-23', '15:47:29');
 
 -- Data for table: menu
-INSERT INTO menu (Item, Price, Cuisine) VALUES ('Rendang', '4.0', 'Indonesian');
-INSERT INTO menu (Item, Price, Cuisine) VALUES ('Ayam Balado', '4.0', 'Indonesian');
-INSERT INTO menu (Item, Price, Cuisine) VALUES ('Gudeg', '3.0', 'Indonesian');
-INSERT INTO menu (Item, Price, Cuisine) VALUES ('Rinderrouladen', '3.5', 'German');
-INSERT INTO menu (Item, Price, Cuisine) VALUES ('Sauerbraten', '4.0', 'German');
-INSERT INTO menu (Item, Price, Cuisine) VALUES ('Bun Cha', '3.0', 'Vietnamese');
-INSERT INTO menu (Item, Price, Cuisine) VALUES ('Thunder Tea Rice', '2.5', 'Chinese');
-INSERT INTO menu (Item, Price, Cuisine) VALUES ('Palak Paneer', '4.0', 'Indian');
+INSERT INTO menu (Item, Price, cuisine_name) VALUES ('Rendang', '4.0', 'Indonesian');
+INSERT INTO menu (Item, Price, cuisine_name) VALUES ('Ayam Balado', '4.0', 'Indonesian');
+INSERT INTO menu (Item, Price, cuisine_name) VALUES ('Gudeg', '3.0', 'Indonesian');
+INSERT INTO menu (Item, Price, cuisine_name) VALUES ('Rinderrouladen', '3.5', 'German');
+INSERT INTO menu (Item, Price, cuisine_name) VALUES ('Sauerbraten', '4.0', 'German');
+INSERT INTO menu (Item, Price, cuisine_name) VALUES ('Bun Cha', '3.0', 'Vietnamese');
+INSERT INTO menu (Item, Price, cuisine_name) VALUES ('Thunder Tea Rice', '2.5', 'Chinese');
+INSERT INTO menu (Item, Price, cuisine_name) VALUES ('Palak Paneer', '4.0', 'Indian');
 
 -- Data for table: orders
 INSERT INTO orders VALUES ('2024-03-01', '10:15:51', 'card' );
