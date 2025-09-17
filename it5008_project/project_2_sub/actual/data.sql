@@ -1,5 +1,70 @@
 -- Select Query
 
+--- Test Case 1 (1-1 relationship between order id and order items): 
+-- SELECT
+--     o.orders_id,
+--     COUNT(oi.order_no) AS number_of_items
+-- FROM
+--     orders o
+-- LEFT JOIN
+--     order_items oi ON o.orders_id = oi.orders_id
+-- GROUP BY
+--     o.orders_id
+-- HAVING
+--     COUNT(oi.order_no) = 0;
+
+--- Test Case 2 (Staff can cook many cuisines): 
+
+-- SELECT
+--     s.staff_id,
+--     s.staff_name,
+--     COUNT(scp.cuisine_name) AS cuisines_can_prepare
+-- FROM
+--     staff s
+-- LEFT JOIN
+--     staff_can_prepare scp ON s.staff_id = scp.staff_id
+-- GROUP BY
+--     s.staff_id, s.staff_name;
+
+-- Test Case 3 (Relationship between order, order items, staff and registration)
+-- SELECT
+--     o.orders_id,
+--     o.orders_date,
+--     o.orders_time,
+--     o.payment,
+--     r.first_name,
+--     r.last_name,
+--     r.phone,
+--     oi.order_no,
+--     m.item,
+--     m.price,
+--     s.staff_name
+-- FROM
+--     orders o
+-- JOIN
+--     registration_membership rm ON o.orders_id = rm.orders_id
+-- JOIN
+--     registration r ON rm.phone = r.phone
+-- JOIN
+--     order_items oi ON o.orders_id = oi.orders_id
+-- JOIN
+--     menu m ON oi.item = m.item
+-- JOIN
+--     staff s ON oi.staff_id = s.staff_id
+-- WHERE
+--     o.orders_id = '20240301007'; 
+
+-- Test Case 4 (Orders placed by unregistered customers and registration_membership to orders )
+-- SELECT
+--     o.orders_id
+-- FROM
+--     orders o
+-- LEFT JOIN
+--     registration_membership rm ON o.orders_id = rm.orders_id
+-- WHERE
+--     rm.phone IS NULL;
+
+
 -- Data for table: cuisines
 INSERT INTO cuisines (cuisine_name) VALUES ('Indonesian');
 INSERT INTO cuisines (cuisine_name) VALUES ('German');
