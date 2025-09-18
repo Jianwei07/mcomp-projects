@@ -56,8 +56,9 @@ CREATE TABLE IF NOT EXISTS bills (
 );
 
 CREATE TABLE IF NOT EXISTS order_items (
-  order_id      VARCHAR(100) PRIMARY KEY,
   bill_id     VARCHAR(11) NOT NULL REFERENCES bills(bill_id),
   item          VARCHAR(100) NOT NULL REFERENCES menu(item) ON UPDATE CASCADE,
-  staff_id      VARCHAR(8) NOT NULL REFERENCES staff(staff_id)
+  staff_id      VARCHAR(8) NOT NULL REFERENCES staff(staff_id),
+  order_count   INTEGER NOT NULL CHECK (order_count > 0),
+  PRIMARY KEY (bill_id, item, staff_id)
 );
