@@ -1,5 +1,5 @@
 -- reset (order matters due to FKs)
-DROP TABLE IF EXISTS registration_membership CASCADE;
+DROP TABLE IF EXISTS membership_orders CASCADE;
 DROP TABLE IF EXISTS orders_paid_by_card CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
@@ -67,7 +67,7 @@ CREATE TABLE payment_card (
 );
 
 -- Registration Bridge
-CREATE TABLE registration_membership (
+CREATE TABLE membership_orders (
   phone      TEXT REFERENCES registration(phone) ON UPDATE CASCADE ON DELETE RESTRICT,
   orders_id  VARCHAR(11) NOT NULL REFERENCES orders(orders_id) ON UPDATE CASCADE ON DELETE CASCADE,
   PRIMARY KEY (phone, orders_id)
@@ -82,9 +82,9 @@ CREATE TABLE orders_paid_by_card (
 
 -- order detail lines - for order duplicates
 CREATE TABLE order_items (
-  order_no        INTEGER CHECK (order_no > 0),
-  orders_id       VARCHAR(11) NOT NULL REFERENCES orders(orders_id) ON UPDATE CASCADE ON DELETE CASCADE,
-  item            TEXT NOT NULL REFERENCES menu(item) ON UPDATE CASCADE ON DELETE RESTRICT,
-  staff_id        TEXT NOT NULL REFERENCES staff(staff_id) ON UPDATE CASCADE ON DELETE RESTRICT,
-  PRIMARY KEY (order_no, orders_id)
+  bill_id     VARCHAR(11) NOT NULL REFERENCES bills(bill_id),
+  item          VARCHAR(100) NOT NULL REFERENCES menu(item) ON UPDATE CASCADE,
+  staff_id      VARCHAR(8) NOT NULL REFERENCES staff(staff_id),
+  order_count   INTEGER NOT NULL CHECK (order_count > 0),
+  PRIMARY KEY (bill_id, item, staff_id)
 );
