@@ -82,7 +82,7 @@ CREATE TABLE orders_paid_by_card (
 
 -- order detail lines - for order duplicates
 CREATE TABLE order_items (
-  bill_id     VARCHAR(11) NOT NULL REFERENCES bills(bill_id),
+  orders_id     VARCHAR(11) NOT NULL REFERENCES orders(orders_id),
   item          VARCHAR(100) NOT NULL REFERENCES menu(item) ON UPDATE CASCADE,
   staff_id      VARCHAR(8) NOT NULL REFERENCES staff(staff_id),
   order_count   INTEGER NOT NULL CHECK (order_count > 0),
