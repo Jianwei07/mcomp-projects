@@ -1,3 +1,30 @@
+-- Query for total price
+with orders as (
+ select a.orders_id, sum(order_Count) as order_items_Count, sum(price_sum) price_sum
+ from (
+ select a.orders_id, a.item, a.order_count, (a.order_count * b.price) as price_sum
+ from order_items a, menu b
+ where a.item = b.item
+ ) a
+ group by a.orders_id
+ order by a.orders_id
+ ),
+membership_orders as (
+       select * 
+       from membership_orders
+       )
+select a.*
+  , b.phone
+  , case when b.phone is not null and order_items_count >= 4 then price_sum - 2
+    else price_sum
+    end TotalPrice
+from orders a
+left join membership_orders b
+ on a.orders_id = b.orders_id
+order by orders_id
+;
+
+-- Simple Query for count
 SELECT COUNT(*) FROM order_items;
 SELECT COUNT(*) FROM orders;
 
