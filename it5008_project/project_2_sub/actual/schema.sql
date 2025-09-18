@@ -86,5 +86,5 @@ CREATE TABLE order_items (
   item          VARCHAR(100) NOT NULL REFERENCES menu(item) ON UPDATE CASCADE,
   staff_id      VARCHAR(8) NOT NULL REFERENCES staff(staff_id),
   order_count   INTEGER NOT NULL CHECK (order_count > 0),
-  PRIMARY KEY (bill_id, item, staff_id)
+  PRIMARY KEY (orders_id, item, staff_id)
 );
