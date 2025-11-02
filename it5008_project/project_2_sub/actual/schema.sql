@@ -16,8 +16,7 @@ CREATE TABLE cuisines (
 
 CREATE TABLE menu (
   item         TEXT PRIMARY KEY,
-  price        NUMERIC(10,2) NOT NULL CHECK (price >= 0),
-  cuisine_name TEXT NOT NULL REFERENCES cuisines(cuisine_name) ON UPDATE CASCADE ON DELETE RESTRICT
+  price        NUMERIC(10,2) NOT NULL CHECK (price >= 0)
 );
 
 CREATE TABLE menu_belongs_to (
