@@ -1,3 +1,107 @@
+-- Clean up previous data
+TRUNCATE Prepare, Ordered_By, Food_Order, Member, Cook, Staff, Item, Cuisine RESTART IDENTITY CASCADE;
+
+
+-- Populate cuisine table
+INSERT INTO cuisine VALUES ('Indonesian');
+INSERT INTO cuisine VALUES ('German');
+INSERT INTO cuisine VALUES ('Vietnamese');
+INSERT INTO cuisine VALUES ('Chinese');
+INSERT INTO cuisine VALUES ('Indian');
+INSERT INTO cuisine VALUES ('Western');
+
+
+-- Populate Item table
+INSERT INTO Item VALUES ('Rendang', '4', 'Indonesian');
+INSERT INTO Item VALUES ('Ayam Balado', '4', 'Indonesian');
+INSERT INTO Item VALUES ('Gudeg', '3', 'Indonesian');
+INSERT INTO Item VALUES ('Rinderrouladen', '3.5', 'German');
+INSERT INTO Item VALUES ('Sauerbraten', '4', 'German');
+INSERT INTO Item VALUES ('Bun Cha', '3', 'Vietnamese');
+INSERT INTO Item VALUES ('Thunder Tea Rice', '2.5', 'Chinese');
+INSERT INTO Item VALUES ('Palak Paneer', '4', 'Indian');
+
+
+-- Populate Staff table
+INSERT INTO Staff VALUES ('STAFF-01', 'Kat');
+INSERT INTO Staff VALUES ('STAFF-02', 'Kat');
+INSERT INTO Staff VALUES ('STAFF-03', 'Taro');
+INSERT INTO Staff VALUES ('STAFF-04', 'Owens');
+INSERT INTO Staff VALUES ('STAFF-05', 'Migi');
+INSERT INTO Staff VALUES ('STAFF-06', 'Dari');
+INSERT INTO Staff VALUES ('STAFF-07', 'Ida');
+INSERT INTO Staff VALUES ('STAFF-08', 'Neyu');
+INSERT INTO Staff VALUES ('STAFF-09', 'Rodion');
+INSERT INTO Staff VALUES ('STAFF-10', 'Neon');
+INSERT INTO Staff VALUES ('STAFF-11', 'Evan');
+INSERT INTO Staff VALUES ('STAFF-12', 'Gerion');
+
+
+-- Populate Cook table
+INSERT INTO Cook VALUES ('STAFF-01', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-01', 'German');
+INSERT INTO Cook VALUES ('STAFF-02', 'German');
+INSERT INTO Cook VALUES ('STAFF-02', 'Chinese');
+INSERT INTO Cook VALUES ('STAFF-03', 'Vietnamese');
+INSERT INTO Cook VALUES ('STAFF-03', 'Chinese');
+INSERT INTO Cook VALUES ('STAFF-03', 'Indian');
+INSERT INTO Cook VALUES ('STAFF-03', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-04', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-04', 'German');
+INSERT INTO Cook VALUES ('STAFF-05', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-05', 'German');
+INSERT INTO Cook VALUES ('STAFF-05', 'Vietnamese');
+INSERT INTO Cook VALUES ('STAFF-06', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-06', 'German');
+INSERT INTO Cook VALUES ('STAFF-06', 'Chinese');
+INSERT INTO Cook VALUES ('STAFF-06', 'Indian');
+INSERT INTO Cook VALUES ('STAFF-06', 'Vietnamese');
+INSERT INTO Cook VALUES ('STAFF-07', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-07', 'German');
+INSERT INTO Cook VALUES ('STAFF-07', 'Vietnamese');
+INSERT INTO Cook VALUES ('STAFF-07', 'Chinese');
+INSERT INTO Cook VALUES ('STAFF-08', 'Vietnamese');
+INSERT INTO Cook VALUES ('STAFF-08', 'Chinese');
+INSERT INTO Cook VALUES ('STAFF-08', 'Indian');
+INSERT INTO Cook VALUES ('STAFF-08', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-09', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-09', 'German');
+INSERT INTO Cook VALUES ('STAFF-10', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-11', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-11', 'German');
+INSERT INTO Cook VALUES ('STAFF-11', 'Vietnamese');
+INSERT INTO Cook VALUES ('STAFF-11', 'Chinese');
+INSERT INTO Cook VALUES ('STAFF-11', 'Indian');
+INSERT INTO Cook VALUES ('STAFF-12', 'Indonesian');
+INSERT INTO Cook VALUES ('STAFF-12', 'German');
+INSERT INTO Cook VALUES ('STAFF-12', 'Vietnamese');
+INSERT INTO Cook VALUES ('STAFF-12', 'Chinese');
+INSERT INTO Cook VALUES ('STAFF-12', 'Indian');
+
+
+-- Populate Member table
+INSERT INTO Member VALUES ('93627414', 'Ignazio', 'Abrahmer', '1/3/2024', '12:19:23');
+INSERT INTO Member VALUES ('89007281', 'Bernard', 'Cowlard', '1/3/2024', '15:39:48');
+INSERT INTO Member VALUES ('81059611', 'Laurette', 'Birney', '1/3/2024', '16:19:03');
+INSERT INTO Member VALUES ('93342383', 'Corby', 'Crinage', '1/3/2024', '18:39:04');
+INSERT INTO Member VALUES ('85625766', 'Mal', 'Bavister', '1/3/2024', '19:22:02');
+INSERT INTO Member VALUES ('95672712', 'Terese', 'Chetwind', '2/3/2024', '10:41:41');
+INSERT INTO Member VALUES ('94385675', 'Kipp', 'Pettifer', '2/3/2024', '14:38:36');
+INSERT INTO Member VALUES ('97416639', 'Ernestine', 'Loughney', '2/3/2024', '16:37:24');
+INSERT INTO Member VALUES ('87113774', 'Estell', 'Barwell', '2/3/2024', '17:34:55');
+INSERT INTO Member VALUES ('95961010', 'Othello', 'Reymers', '3/3/2024', '10:27:19');
+INSERT INTO Member VALUES ('96537349', 'Grissel', 'Howels', '3/3/2024', '17:06:40');
+INSERT INTO Member VALUES ('93603800', 'Maddie', 'Izkoveski', '4/3/2024', '10:03:52');
+INSERT INTO Member VALUES ('87433248', 'Nolan', 'Capelin', '4/3/2024', '10:54:51');
+INSERT INTO Member VALUES ('98216900', 'Alyce', 'Brenard', '4/3/2024', '14:04:38');
+INSERT INTO Member VALUES ('95624750', 'Jacenta', 'Buxsy', '5/3/2024', '14:34:56');
+INSERT INTO Member VALUES ('85205752', 'Kiah', 'Cotter', '5/3/2024', '17:34:06');
+INSERT INTO Member VALUES ('93344468', 'Gage', 'Whaymand', '6/3/2024', '14:52:02');
+INSERT INTO Member VALUES ('83187835', 'Rickey', 'Hector', '7/3/2024', '15:41:29');
+INSERT INTO Member VALUES ('87547836', 'Flynn', 'Massot', '8/3/2024', '12:22:29');
+
+
+-- Populate via Procedure
 CALL insert_order_item(
         '20240301001', '2024-03-01', '10:15:51', 'card', 
         '3742-8375-6443-8590', 
