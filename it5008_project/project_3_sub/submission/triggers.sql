@@ -68,7 +68,7 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_prevent_cook_delete ON Cook;
 CREATE TRIGGER trg_prevent_cook_delete
-BEFORE DELETE ON Cook
+BEFORE DELETE OR UPDATE ON Cook
 FOR EACH ROW
 EXECUTE FUNCTION prevent_cook_delete();
 
