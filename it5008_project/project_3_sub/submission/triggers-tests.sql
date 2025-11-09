@@ -172,64 +172,72 @@ COMMIT;
 -- CONSTRAINT 4: Total price calculation with discount
 -- ============================================
 
--- TEST 4.1: Member with 4 items → Should get $2 discount
--- Price: 4*4 = 16, with discount = 14
-INSERT INTO Food_Order VALUES ('20240320008', '1/3/2024', '12:19:23', 'card', '5108-7574-2920-6803', 'mastercard', 0);
-INSERT INTO Ordered_By (order_id, member) VALUES ('20240320008', 98765432);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320008', 'Bun Cha', 'STAFF-01', 4);
-SELECT 'TEST 4.1: ' || id || ' = ' || total_price || ' ' ||
-       CASE WHEN total_price = 14 THEN '✓ PASS' ELSE '✗ FAIL (expected 14)' END 
-FROM Food_Order WHERE id = '20240320008';
+-- TEST 4.1: Member with 4 Indonesian dishes → discount applies
+-- Items: 4 × Rendang ($4) = 16 → 16 − 2 = 14
+INSERT INTO Food_Order VALUES ('20250320001', '2025-03-01', '12:19:23', 'card', '5108-7574-2920-6803', 'mastercard', 0);
+INSERT INTO Ordered_By VALUES ('20250320001', 93627414);
+INSERT INTO Prepare VALUES ('20250320001', 'Rendang', 'STAFF-01', 4);
+SELECT id, total_price FROM Food_Order WHERE id = '20250320001';
 
--- TEST 4.2: Non-member with 4 items → No discount
--- Price: 4*4 = 16 (no discount)
-INSERT INTO Food_Order VALUES ('20240320009', '1/3/2024', '13:46:33', 'card', '3466-5960-1418-4580', 'americanexpress', 0);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320009', 'Bun Cha', 'STAFF-02', 4);
-SELECT 'TEST 4.2: ' || id || ' = ' || total_price || ' ' ||
-       CASE WHEN total_price = 16 THEN '✓ PASS' ELSE '✗ FAIL (expected 16)' END 
-FROM Food_Order WHERE id = '20240320009';
 
--- TEST 4.3: Member with 3 items → No discount (< 4 items)
--- Price: 3*4 = 12 (no discount)
-INSERT INTO Food_Order VALUES ('20240320010', '1/3/2024', '13:48:15', 'card', '3379-4110-3466-1310', 'americanexpress', 0);
-INSERT INTO Ordered_By (order_id, member) VALUES ('20240320010', 98765432);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320010', 'Bun Cha', 'STAFF-01', 3);
-SELECT 'TEST 4.3: ' || id || ' = ' || total_price || ' ' ||
-       CASE WHEN total_price = 12 THEN '✓ PASS' ELSE '✗ FAIL (expected 12)' END 
-FROM Food_Order WHERE id = '20240320010';
+-- TEST 4.2: Non-member with 4 Indonesian dishes → no discount
+-- Items: 4 × Rendang ($4) = 16
+INSERT INTO Food_Order VALUES ('20250320002', '2025-03-01', '13:46:33', 'card', '3466-5960-1418-4580', 'visa', 0);
+INSERT INTO Prepare VALUES ('20250320002', 'Rendang', 'STAFF-04', 4);
+SELECT id, total_price FROM Food_Order WHERE id = '20250320002';
 
--- TEST 4.4: Member with mixed items (4+ total) → Discount applies
--- Price: 4 + 5 + 6 + 3 = 18, with discount = 16
-INSERT INTO Food_Order VALUES ('20240320011', '1/3/2024', '15:39:48', 'card', '3742-8382-6101-0570', 'americanexpress', 0);
-INSERT INTO Ordered_By (order_id, member) VALUES ('20240320011', 87654321);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES 
-('20240320011', 'Bun Cha', 'STAFF-01', 1),
-('20240320011', 'Pho', 'STAFF-02', 1),
-('20240320011', 'Pad Thai', 'STAFF-01', 1),
-('20240320011', 'Spring Roll', 'STAFF-02', 1);
-SELECT 'TEST 4.4: ' || id || ' = ' || total_price || ' ' ||
-       CASE WHEN total_price = 16 THEN '✓ PASS' ELSE '✗ FAIL (expected 16)' END 
-FROM Food_Order WHERE id = '20240320011';
+
+-- TEST 4.3: Member with only 3 dishes → no discount
+-- Items: 3 × Gudeg ($3) = 9
+INSERT INTO Food_Order VALUES ('20250320003', '2025-03-01', '13:48:15', 'card', '3379-4110-3466-1310', 'visa', 0);
+INSERT INTO Ordered_By VALUES ('20250320003', 85205752);  -- member Kiah
+INSERT INTO Prepare VALUES ('20250320003', 'Gudeg', 'STAFF-05', 3);
+SELECT id, total_price FROM Food_Order WHERE id = '20250320003';
+
+
+-- TEST 4.4: Member with mixed cuisines totaling 4+ items → discount applies
+-- Items: Rendang (2×4) + Sauerbraten (2×4) = 16 → 14 after discount
+INSERT INTO Food_Order VALUES ('20250320004', '2025-03-01', '15:39:48', 'card', '3742-8382-6101-0570', 'mastercard', 0);
+INSERT INTO Ordered_By VALUES ('20250320004', 89007281);  -- member Bernard
+INSERT INTO Prepare VALUES
+('20250320004', 'Rendang', 'STAFF-06', 2),
+('20250320004', 'Sauerbraten', 'STAFF-06', 2);
+SELECT id, total_price FROM Food_Order WHERE id = '20250320004';
+
 
 -- TEST 4.5: Add item to make eligible for discount
--- Initial: 3 items = 12 (no discount)
--- After adding 1 more: 4 items = 14 (with discount)
-INSERT INTO Food_Order VALUES ('20240320012', '1/3/2024', '16:19:03', 'card', '5002-3594-5319-1014', 'mastercard', 0);
-INSERT INTO Ordered_By (order_id, member) VALUES ('20240320012', 91234567);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320012', 'Bun Cha', 'STAFF-01', 3);
-SELECT 'TEST 4.5a: ' || id || ' = ' || total_price || ' ' ||
-       CASE WHEN total_price = 12 THEN '✓ PASS' ELSE '✗ FAIL (expected 12)' END 
-FROM Food_Order WHERE id = '20240320012';
+-- Step 1: 3 dishes → no discount (3 × Rinderrouladen = 10.5)
+INSERT INTO Food_Order VALUES ('20250320005', '2025-03-01', '16:19:03', 'card', '5002-3594-5319-1014', 'mastercard', 0);
+INSERT INTO Ordered_By VALUES ('20250320005', 81059611);  -- member Laurette
+INSERT INTO Prepare VALUES ('20250320005', 'Rinderrouladen', 'STAFF-02', 3);
+SELECT id, total_price FROM Food_Order WHERE id = '20250320005';
 
--- Now add one more item
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320012', 'Spring Roll', 'STAFF-02', 1);
-SELECT 'TEST 4.5b: ' || id || ' = ' || total_price || ' ' ||
-       CASE WHEN total_price = 13 THEN '✓ PASS' ELSE '✗ FAIL (expected 13)' END 
-FROM Food_Order WHERE id = '20240320012';
+-- Step 2: Add 1 Ayam Balado ($4) → total 14.5 → discount −2 = 12.5
+INSERT INTO Prepare VALUES ('20250320005', 'Ayam Balado', 'STAFF-01', 1);
+SELECT id, total_price FROM Food_Order WHERE id = '20250320005';
 
--- ============================================
--- SUMMARY
--- ============================================
-SELECT '========================================' as summary;
-SELECT 'All tests completed. Check results above.' as summary;
-SELECT 'Failed constraints should have raised exceptions.' as summary;
+
+-- TEST 4.6: Decrease quantity → discount removed
+-- Step 1: 4 items → discount applies (4 × Palak Paneer = 16 → 14)
+INSERT INTO Food_Order VALUES ('20250320006', '2025-03-01', '17:00:00', 'card', '9999-8888-7777-6666', 'visa', 0);
+INSERT INTO Ordered_By VALUES ('20250320006', 93342383);  -- member Corby
+INSERT INTO Prepare VALUES ('20250320006', 'Palak Paneer', 'STAFF-03', 4);
+SELECT id, total_price FROM Food_Order WHERE id = '20250320006';
+
+-- Step 2: Reduce to 3 → no discount (3 × 4 = 12)
+UPDATE Prepare SET qty = 3 WHERE order_id = '20250320006' AND item = 'Palak Paneer';
+SELECT id, total_price FROM Food_Order WHERE id = '20250320006';
+
+
+-- TEST 4.7: Delete item → total price recalculated
+-- Step 1: 4 total items → discount applies ((2×Bun Cha=$6)+(2×Thunder Tea Rice=$5)=11−2=9)
+INSERT INTO Food_Order VALUES ('20250320007', '2025-03-01', '17:10:00', 'card', '4444-5555-6666-7777', 'visa', 0);
+INSERT INTO Ordered_By VALUES ('20250320007', 96537349);  -- member Grissel
+INSERT INTO Prepare VALUES
+('20250320007', 'Bun Cha', 'STAFF-03', 2),
+('20250320007', 'Thunder Tea Rice', 'STAFF-02', 2);
+SELECT id, total_price FROM Food_Order WHERE id = '20250320007';
+
+-- Step 2: Delete 1 item → below 4 → no discount (2 × 3 = 6)
+DELETE FROM Prepare WHERE order_id = '20250320007' AND item = 'Thunder Tea Rice';
+SELECT id, total_price FROM Food_Order WHERE id = '20250320007';

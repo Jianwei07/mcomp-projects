@@ -80,25 +80,25 @@ INSERT INTO Cook VALUES ('STAFF-12', 'Indian');
 
 
 -- Populate Member table
-INSERT INTO Member VALUES ('93627414', 'Ignazio', 'Abrahmer', '1/3/2024', '12:19:23');
-INSERT INTO Member VALUES ('89007281', 'Bernard', 'Cowlard', '1/3/2024', '15:39:48');
-INSERT INTO Member VALUES ('81059611', 'Laurette', 'Birney', '1/3/2024', '16:19:03');
-INSERT INTO Member VALUES ('93342383', 'Corby', 'Crinage', '1/3/2024', '18:39:04');
-INSERT INTO Member VALUES ('85625766', 'Mal', 'Bavister', '1/3/2024', '19:22:02');
-INSERT INTO Member VALUES ('95672712', 'Terese', 'Chetwind', '2/3/2024', '10:41:41');
-INSERT INTO Member VALUES ('94385675', 'Kipp', 'Pettifer', '2/3/2024', '14:38:36');
-INSERT INTO Member VALUES ('97416639', 'Ernestine', 'Loughney', '2/3/2024', '16:37:24');
-INSERT INTO Member VALUES ('87113774', 'Estell', 'Barwell', '2/3/2024', '17:34:55');
-INSERT INTO Member VALUES ('95961010', 'Othello', 'Reymers', '3/3/2024', '10:27:19');
-INSERT INTO Member VALUES ('96537349', 'Grissel', 'Howels', '3/3/2024', '17:06:40');
-INSERT INTO Member VALUES ('93603800', 'Maddie', 'Izkoveski', '4/3/2024', '10:03:52');
-INSERT INTO Member VALUES ('87433248', 'Nolan', 'Capelin', '4/3/2024', '10:54:51');
-INSERT INTO Member VALUES ('98216900', 'Alyce', 'Brenard', '4/3/2024', '14:04:38');
-INSERT INTO Member VALUES ('95624750', 'Jacenta', 'Buxsy', '5/3/2024', '14:34:56');
-INSERT INTO Member VALUES ('85205752', 'Kiah', 'Cotter', '5/3/2024', '17:34:06');
-INSERT INTO Member VALUES ('93344468', 'Gage', 'Whaymand', '6/3/2024', '14:52:02');
-INSERT INTO Member VALUES ('83187835', 'Rickey', 'Hector', '7/3/2024', '15:41:29');
-INSERT INTO Member VALUES ('87547836', 'Flynn', 'Massot', '8/3/2024', '12:22:29');
+INSERT INTO Member VALUES ('93627414', 'Ignazio', 'Abrahmer', '2024-03-01', '12:19:23');
+INSERT INTO Member VALUES ('89007281', 'Bernard', 'Cowlard', '2024-03-01', '15:39:48');
+INSERT INTO Member VALUES ('81059611', 'Laurette', 'Birney', '2024-03-01', '16:19:03');
+INSERT INTO Member VALUES ('93342383', 'Corby', 'Crinage', '2024-03-01', '18:39:04');
+INSERT INTO Member VALUES ('85625766', 'Mal', 'Bavister', '2024-03-01', '19:22:02');
+INSERT INTO Member VALUES ('95672712', 'Terese', 'Chetwind', '2024-03-02', '10:41:41');
+INSERT INTO Member VALUES ('94385675', 'Kipp', 'Pettifer', '2024-03-02', '14:38:36');
+INSERT INTO Member VALUES ('97416639', 'Ernestine', 'Loughney', '2024-03-02', '16:37:24');
+INSERT INTO Member VALUES ('87113774', 'Estell', 'Barwell', '2024-03-02', '17:34:55');
+INSERT INTO Member VALUES ('95961010', 'Othello', 'Reymers', '2024-03-03', '10:27:19');
+INSERT INTO Member VALUES ('96537349', 'Grissel', 'Howels', '2024-03-03', '17:06:40');
+INSERT INTO Member VALUES ('93603800', 'Maddie', 'Izkoveski', '2024-03-04', '10:03:52');
+INSERT INTO Member VALUES ('87433248', 'Nolan', 'Capelin', '2024-03-04', '10:54:51');
+INSERT INTO Member VALUES ('98216900', 'Alyce', 'Brenard', '2024-03-04', '14:04:38');
+INSERT INTO Member VALUES ('95624750', 'Jacenta', 'Buxsy', '2024-03-05', '14:34:56');
+INSERT INTO Member VALUES ('85205752', 'Kiah', 'Cotter', '2024-03-05', '17:34:06');
+INSERT INTO Member VALUES ('93344468', 'Gage', 'Whaymand', '2024-03-06', '14:52:02');
+INSERT INTO Member VALUES ('83187835', 'Rickey', 'Hector', '2024-03-07', '15:41:29');
+INSERT INTO Member VALUES ('87547836', 'Flynn', 'Massot', '2024-03-08', '12:22:29');
 
 
 -- Populate via Procedure
