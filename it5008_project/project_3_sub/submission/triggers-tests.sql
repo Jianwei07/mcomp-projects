@@ -35,7 +35,7 @@ INSERT INTO Member (phone, firstname, lastname, reg_date, reg_time) VALUES
 -- ============================================
 -- CONSTRAINT 1: Order must have at least one item
 -- ============================================
-INSERT INTO Food_Order VALUES ('20251020123', '20/10/2025', '20:56:01', 'cash', NULL, NULL, '12'); 
+INSERT INTO Food_Order VALUES ('20251020123', '2025-10-20', '20:56:01', 'cash', NULL, NULL, '12'); 
 INSERT INTO Prepare VALUES ('20251020123', 'Rendang', 'STAFF-01', '1');
 INSERT INTO Prepare VALUES ('20251020123', 'Ayam Balado', 'STAFF-03', '2');
 
@@ -72,8 +72,9 @@ and staff = 'STAFF-01'
 ; 
 
 
-
--- Tests for Constraint 2: Staff must be qualified to cook the item's cuisine
+-- ============================================
+-- CONSTRAINT 2: Staff must be qualified to cook the item's cuisine
+-- ============================================
 
 -- 1. Valid insert (should pass)
 INSERT INTO Prepare VALUES ('20240520001', 'Rendang', 'STAFF-01', 1);
