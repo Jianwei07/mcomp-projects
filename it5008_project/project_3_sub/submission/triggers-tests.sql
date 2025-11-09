@@ -48,27 +48,28 @@ FROM Prepare
 WHERE order_id = '20251020123'
 ORDER BY item
 ;
--- Records will be deleted from Food_Order and Prepare tables due to ON DELETE CASCADE
-DELETE FROM Food_Order
-WHERE id = '20251020123'
-; 
--- Deletion will fail due to trigger
+
+-- 1. Deletion will fail due to trigger
 DELETE FROM Prepare
 WHERE order_id = '20251020123'
 ; 
--- Update will fail due to check constraint
+-- 2. Update will fail due to check constraint
 UPDATE Prepare
 SET qty = 0
 WHERE order_id = '20251020123'
 and item = 'Rendang'
 and staff = 'STAFF-01'
 ; 
--- Deletion will be executed and total_price will be re-computed with trg_update_total_price trigger on Prepare
+-- 3. Deletion will be executed and total_price will be re-computed with trg_update_total_price trigger on Prepare
 -- total_price is updated from 12 to 8
 DELETE FROM Prepare
 WHERE order_id = '20251020123'
 and item = 'Rendang'
 and staff = 'STAFF-01'
+; 
+-- 4. Records will be deleted from Food_Order and Prepare tables due to ON DELETE CASCADE
+DELETE FROM Food_Order
+WHERE id = '20251020123'
 ; 
 
 
