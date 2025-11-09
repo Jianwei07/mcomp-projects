@@ -118,10 +118,20 @@ DELETE FROM Cook WHERE staff='STAFF-04' AND cuisine='Indonesian';
 -- ============================================
 
 -- TEST 3.1: Order before member registration (SHOULD FAIL)
-INSERT INTO Food_Order VALUES ('20240320005', '14/2/2024', '08:00:00', 'card', '3379-4110-3466-1310', 'americanexpress', 0);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320005', 'Pho', 'STAFF-01', 1);
--- Expected: This should FAIL - order is before Alice's registration (2024-02-15 09:00)
--- INSERT INTO Ordered_By (order_id, member) VALUES ('20240320005', 91234567);
+BEGIN; -- Start a transaction
+
+-- Test 1: Create an order on Jan 1st, 2024 (BEFORE the Jan 3rd registration)
+INSERT INTO Food_Order VALUES ('20240101001', '2024-01-01', '10:00:00', 'cash', NULL, NULL, 0);
+
+-- Test 2: Link it to member '93627414'
+INSERT INTO Ordered_By (order_id, member) VALUES ('20240101001', '93627414');
+
+-- Test 3: Try to commit the transaction
+-- This COMMIT line is what will fail and roll back the transaction
+COMMIT;
+
+-- Error Message: ERROR:  Invalid order - Order on 2024-01-01 10:00:00 is before member registration on 2024-01-03 12:19:23
+-- CONTEXT:  PL/pgSQL function order_member() line 17 at RAISE SQL state: P0001
 
 -- TEST 3.2: Order after member registration (SHOULD SUCCEED)
 INSERT INTO Food_Order VALUES ('20240320006', '16/2/2024', '10:00:00', 'card', '3742-8382-6101-0570', 'americanexpress', 0);
@@ -131,10 +141,23 @@ SELECT 'TEST 3.2: ' || CASE WHEN COUNT(*) = 1 THEN '✓ PASS' ELSE '✗ FAIL' EN
 FROM Ordered_By WHERE order_id = '20240320006';
 
 -- TEST 3.3: Order on same day but earlier time (SHOULD FAIL)
-INSERT INTO Food_Order VALUES ('20240320007', '1/3/2024', '09:00:00', 'card', '5002-3594-5319-1014', 'mastercard', 0);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320007', 'Pad Thai', 'STAFF-01', 1);
--- Expected: This should FAIL - order time 09:00 is before Bob's registration 10:00
--- INSERT INTO Ordered_By (order_id, member) VALUES ('20240320007', 98765432);
+BEGIN;
+
+-- This order is on the SAME DAY (Jan 3) as registration,
+-- but at an EARLIER TIME (10:00:00) than registration (12:19:23)
+INSERT INTO Food_Order VALUES ('20240103001', '2024-01-03', '10:00:00', 'card', '1111-2222-3333-4444', 'visa', 0);
+
+-- Link the order to member '93627414'
+INSERT INTO Ordered_By (order_id, member) VALUES ('20240103001', '93627414');
+
+-- Add an item to the order
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240103001', 'Rendang', 'STAFF-01', 1);
+
+-- This COMMIT will execute the deferred trigger and should FAIL.
+COMMIT;
+
+-- Error Message: ERROR:  Invalid order - Order on 2024-01-03 10:00:00 is before member registration on 2024-01-03 12:19:23
+-- CONTEXT:  PL/pgSQL function order_member() line 17 at RAISE SQL state: P0001
 
 -- ============================================
 -- CONSTRAINT 4: Total price calculation with discount
