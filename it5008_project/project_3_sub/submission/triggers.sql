@@ -16,8 +16,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_check_prepare_delete_min_items ON Prepare;
-CREATE TRIGGER trg_check_prepare_delete_min_items
+CREATE CONSTRAINT TRIGGER trg_check_prepare_delete_min_items
 AFTER DELETE ON Prepare
+DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION check_order_min_items();
 
