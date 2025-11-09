@@ -111,24 +111,24 @@ DROP FUNCTION IF EXISTS order_member();
 CREATE OR REPLACE FUNCTION order_member()
 RETURNS TRIGGER AS $$
 DECLARE
- v_reg_datetime TIMESTAMP;
- v_order_datetime TIMESTAMP;
+    v_reg_datetime TIMESTAMP;
+    v_order_datetime TIMESTAMP;
 BEGIN
- SELECT reg_date + reg_time INTO v_reg_datetime
- FROM Member a
- WHERE a.phone = NEW.member
- LIMIT 1;
+    SELECT reg_date + reg_time INTO v_reg_datetime
+    FROM Member a
+    WHERE a.phone = NEW.member
+    LIMIT 1;
 
- SELECT date + time INTO v_order_datetime
- FROM Food_Order b
- WHERE b.id = NEW.order_id
- LIMIT 1;
+    SELECT date + time INTO v_order_datetime
+    FROM Food_Order b
+    WHERE b.id = NEW.order_id
+    LIMIT 1;
 
- IF v_order_datetime < v_reg_datetime THEN
-  RAISE EXCEPTION 'Invalid order - Order on % is before member registration on %', v_order_datetime, v_reg_datetime;
- END IF;
+    IF v_order_datetime < v_reg_datetime THEN
+        RAISE EXCEPTION 'Invalid order - Order on % is before member registration on %', v_order_datetime, v_reg_datetime;
+    END IF;
 
- RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -143,22 +143,22 @@ DROP FUNCTION IF EXISTS order_date();
 CREATE OR REPLACE FUNCTION order_date()
 RETURNS TRIGGER AS $$
 DECLARE
- v_reg_datetime TIMESTAMP;
- v_order_datetime TIMESTAMP;
+    v_reg_datetime TIMESTAMP;
+    v_order_datetime TIMESTAMP;
 BEGIN
- SELECT a.date + a.time, c.reg_date + c.reg_time
- INTO v_order_datetime, v_reg_datetime
- FROM food_order a
- JOIN ordered_by b ON a.id = b.order_id
- JOIN member c ON b.member = c.phone
- WHERE a.id = OLD.id
- ORDER BY a.date + a.time
- LIMIT 1;
+    SELECT a.date + a.time, c.reg_date + c.reg_time
+    INTO v_order_datetime, v_reg_datetime
+    FROM food_order a
+    JOIN ordered_by b ON a.id = b.order_id
+    JOIN member c ON b.member = c.phone
+    WHERE a.id = OLD.id
+    ORDER BY a.date + a.time
+    LIMIT 1;
 
- IF v_order_datetime < v_reg_datetime THEN
-  RAISE EXCEPTION 'Order date cannot be updated to % as it lies before member registration date %', v_order_datetime, v_reg_datetime;
- END IF;
- RETURN OLD;
+    IF v_order_datetime < v_reg_datetime THEN
+        RAISE EXCEPTION 'Order date cannot be updated to % as it lies before member registration date %', v_order_datetime, v_reg_datetime;
+    END IF;
+    RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -173,22 +173,22 @@ DROP FUNCTION IF EXISTS reg_date();
 CREATE OR REPLACE FUNCTION reg_date()
 RETURNS TRIGGER AS $$
 DECLARE
- v_reg_datetime TIMESTAMP;
- v_order_datetime TIMESTAMP;
+    v_reg_datetime TIMESTAMP;
+    v_order_datetime TIMESTAMP;
 BEGIN
- SELECT a.date + a.time, c.reg_date + c.reg_time
- INTO v_order_datetime, v_reg_datetime
- FROM food_order a
- JOIN ordered_by b ON a.id = b.order_id
- JOIN member c ON b.member = c.phone
- WHERE c.phone = OLD.phone
- ORDER BY a.date + a.time
- LIMIT 1;
+    SELECT a.date + a.time, c.reg_date + c.reg_time
+    INTO v_order_datetime, v_reg_datetime
+    FROM food_order a
+    JOIN ordered_by b ON a.id = b.order_id
+    JOIN member c ON b.member = c.phone
+    WHERE c.phone = OLD.phone
+    ORDER BY a.date + a.time
+    LIMIT 1;
 
- IF v_order_datetime < v_reg_datetime THEN
-  RAISE EXCEPTION 'Member registration date cannot be updated to % as it lies after order date %', v_reg_datetime, v_order_datetime;
- END IF;
- RETURN OLD;
+    IF v_order_datetime < v_reg_datetime THEN
+        RAISE EXCEPTION 'Member registration date cannot be updated to % as it lies after order date %', v_reg_datetime, v_order_datetime;
+    END IF;
+    RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
