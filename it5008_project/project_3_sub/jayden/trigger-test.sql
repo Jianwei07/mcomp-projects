@@ -1,92 +1,82 @@
--- ====================================================================
--- SETUP: Clean and populate test data
--- ====================================================================
+-- Setup: Create schema and add sample data
+-- (Assuming schema-part3.sql is already loaded)
 
-TRUNCATE Prepare, Ordered_By, Food_Order, Member, Cook, Staff, Item, Cuisine 
-RESTART IDENTITY CASCADE;
+-- Add sample cuisines
+INSERT INTO Cuisine VALUES ('Vietnamese'), ('Italian');
 
--- Insert test data
-INSERT INTO Cuisine VALUES ('Italian'), ('Japanese'), ('Chinese');
+-- Add sample items
+INSERT INTO Item VALUES ('Pho', 4.00, 'Vietnamese');
+INSERT INTO Item VALUES ('Bun Cha', 4.00, 'Vietnamese');
+INSERT INTO Item VALUES ('Pizza', 5.00, 'Italian');
 
-INSERT INTO Item VALUES 
-    ('Pasta', 10, 'Italian'), 
-    ('Sushi', 8, 'Japanese'), 
-    ('Pizza', 12, 'Italian'),
-    ('Ramen', 9, 'Japanese');
+-- Add sample staff
+INSERT INTO Staff VALUES ('STAFF-01', 'Alice');
+INSERT INTO Staff VALUES ('STAFF-02', 'Bob');
 
-INSERT INTO Staff VALUES 
-    ('S1', 'Mario'), 
-    ('S2', 'Sakura'),
-    ('S3', 'Wei');
+-- Staff skills
+INSERT INTO Cook VALUES ('STAFF-01', 'Vietnamese');
+INSERT INTO Cook VALUES ('STAFF-02', 'Italian');
 
-INSERT INTO Cook VALUES 
-    ('S1', 'Italian'), 
-    ('S2', 'Japanese'),
-    ('S3', 'Chinese');
-
-INSERT INTO Member VALUES 
-    (1111, 'John', 'Doe', '2024-01-01', '10:00:00'),
-    (2222, 'Jane', 'Smith', '2024-02-01', '12:00:00');
+-- Add sample member
+INSERT INTO Member VALUES (91234567, 'John', 'Doe', '2024-01-01', '10:00:00');
 
 
--- ====================================================================
--- TEST CONSTRAINT 1: Each order must have at least one item
--- ====================================================================
+-- ============================================
+-- TEST 1: Constraint 1 - Cannot delete last item
+-- ============================================
+-- Expected: SUCCESS (insert)
+INSERT INTO Food_Order VALUES ('ORD001', '2024-02-01', '12:00:00', 'cash', NULL, NULL, 0);
+INSERT INTO Prepare VALUES ('ORD001', 'Pho', 'STAFF-01', 2);
 
--- Setup: Create order with one item
-INSERT INTO Food_Order (id, date, time, payment_method, card, card_type, total_price)
-VALUES ('O1', '2024-03-01', '13:00:00', 'cash', NULL, NULL, 0);
-
-INSERT INTO Prepare VALUES ('O1', 'Pasta', 'S1', 1);
-
--- Test 1a: Delete the ONLY item -> should FAIL
--- Expected: ERROR (Constraint 1 Violation)
-BEGIN;
-    DELETE FROM Prepare WHERE order_id = 'O1' AND item = 'Pasta';
-    -- This should raise exception
-ROLLBACK;
-
--- Test 1b: Add second item, then delete one -> should SUCCEED
-INSERT INTO Prepare VALUES ('O1', 'Pizza', 'S1', 1);
-DELETE FROM Prepare WHERE order_id = 'O1' AND item = 'Pasta';
--- Expected: SUCCESS (still has Pizza)
+-- Expected: FAIL (cannot delete last item)
+DELETE FROM Prepare WHERE order_id = 'ORD001';
+-- Error: "Order must have at least one item"
 
 
--- ====================================================================
--- TEST CONSTRAINT 2: Staff must be qualified to cook item's cuisine
--- ====================================================================
-
-INSERT INTO Food_Order (id, date, time, payment_method, total_price)
-VALUES ('O2', '2024-03-02', '14:00:00', 'cash', 0);
-
--- Test 2a: Staff S2 (Japanese) tries to cook Italian -> should FAIL
--- Expected: ERROR (Constraint 2 Violation)
-BEGIN;
-    INSERT INTO Prepare VALUES ('O2', 'Pizza', 'S2', 1);
-ROLLBACK;
-
--- Test 2b: Staff S1 (Italian) cooks Italian -> should SUCCEED
-INSERT INTO Prepare VALUES ('O2', 'Pizza', 'S1', 1);
--- Expected: SUCCESS
+-- ============================================
+-- TEST 2: Constraint 2 - Staff must know cuisine
+-- ============================================
+-- Expected: FAIL (STAFF-02 cannot cook Vietnamese)
+INSERT INTO Food_Order VALUES ('ORD002', '2024-02-02', '13:00:00', 'cash', NULL, NULL, 0);
+INSERT INTO Prepare VALUES ('ORD002', 'Pho', 'STAFF-02', 1);
+-- Error: "Staff cannot cook this cuisine"
 
 
--- ====================================================================
--- TEST CONSTRAINT 3: Order must be after member registration
--- ====================================================================
+-- ============================================
+-- TEST 3: Constraint 3 - Order after registration
+-- ============================================
+-- Expected: FAIL (order before member registration)
+INSERT INTO Food_Order VALUES ('ORD003', '2023-12-01', '09:00:00', 'cash', NULL, NULL, 0);
+INSERT INTO Prepare VALUES ('ORD003', 'Pho', 'STAFF-01', 1);
+INSERT INTO Ordered_By VALUES ('ORD003', 91234567);
+-- Error: "Order date/time before member registration"
 
--- Member 1111 registered on 2024-01-01 10:00:00
 
--- Test 3a: Order BEFORE registration -> should FAIL
--- Expected: ERROR (Constraint 3 Violation)
-INSERT INTO Food_Order (id, date, time, payment_method, total_price)
-VALUES ('O3', '2023-12-31', '09:00:00', 'cash', 0);
+-- ============================================
+-- TEST 4: Constraint 4 - Total price calculation
+-- ============================================
+-- Member order with 4 items: $4 × 4 - $2 = $14
+INSERT INTO Food_Order VALUES ('ORD004', '2024-03-01', '12:00:00', 'cash', NULL, NULL, 0);
+INSERT INTO Ordered_By VALUES ('ORD004', 91234567);
+INSERT INTO Prepare VALUES ('ORD004', 'Pho', 'STAFF-01', 4);
 
-INSERT INTO Prepare VALUES ('O3', 'Sushi', 'S2', 1);
+-- Check total_price
+SELECT id, total_price FROM Food_Order WHERE id = 'ORD004';
+-- Expected: total_price = 14.00
 
-BEGIN;
-    INSERT INTO Ordered_By VALUES ('O3', 1111);
-ROLLBACK;
+-- Non-member order with 4 items: $4 × 4 = $16
+INSERT INTO Food_Order VALUES ('ORD005', '2024-03-05', '15:00:00', 'cash', NULL, NULL, 0);
+INSERT INTO Prepare VALUES ('ORD005', 'Pho', 'STAFF-01', 4);
 
--- Test 3b: Order AFTER registration -> should SUCCEED
-INSERT INTO Food_Order (id, date, time, payment_method, total_price)
-VALUES ('O4', '2024-03-10', '15:00:00', '
+-- Check total_price
+SELECT id, total_price FROM Food_Order WHERE id = 'ORD005';
+-- Expected: total_price = 16.00
+
+-- Member order with 3 items: $4 × 3 = $12 (no discount)
+INSERT INTO Food_Order VALUES ('ORD006', '2024-03-10', '18:00:00', 'cash', NULL, NULL, 0);
+INSERT INTO Ordered_By VALUES ('ORD006', 91234567);
+INSERT INTO Prepare VALUES ('ORD006', 'Pho', 'STAFF-01', 3);
+
+-- Check total_price
+SELECT id, total_price FROM Food_Order WHERE id = 'ORD006';
+-- Expected: total_price = 12.00
