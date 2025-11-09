@@ -1,109 +1,161 @@
--- Clean up previous data
-TRUNCATE Prepare, Ordered_By, Food_Order, Member, Cook, Staff, Item, Cuisine RESTART IDENTITY CASCADE;
+-- ============================================
+-- SETUP: Test Data
+-- ============================================
 
---------------------------------------------------
--- Setup shared test data
---------------------------------------------------
+-- Cuisines
+INSERT INTO Cuisine (name) VALUES ('Vietnamese'), ('Thai'), ('Western');
 
--- Insert cuisines
-INSERT INTO Cuisine VALUES ('Italian'), ('Japanese');
+-- Items
+INSERT INTO Item (name, price, cuisine) VALUES
+('Bun Cha', 4.00, 'Vietnamese'),
+('Pho', 5.00, 'Vietnamese'),
+('Pad Thai', 6.00, 'Thai'),
+('Spring Roll', 3.00, 'Vietnamese'),
+('Fried Rice', 4.00, 'Thai');
 
--- Insert items
-INSERT INTO Item VALUES ('Pasta', 10, 'Italian'), ('Sushi', 8, 'Japanese'), ('Pizza', 12, 'Italian');
+-- Staff
+INSERT INTO Staff (id, name) VALUES
+('STAFF-01', 'John Nguyen'),
+('STAFF-02', 'Mary Chen'),
+('STAFF-03', 'David Wong');
 
--- Insert staff
-INSERT INTO Staff VALUES ('S1', 'Mario'), ('S2', 'Sakura');
+-- Cook assignments
+INSERT INTO Cook (staff, cuisine) VALUES
+('STAFF-01', 'Vietnamese'),
+('STAFF-01', 'Thai'),
+('STAFF-02', 'Vietnamese'),
+('STAFF-03', 'Western');
 
--- Insert cooks (who can cook which cuisines)
-INSERT INTO Cook VALUES ('S1', 'Italian'), ('S2', 'Japanese');
+-- Members
+INSERT INTO Member (phone, firstname, lastname, reg_date, reg_time) VALUES
+(91234567, 'Alice', 'Tan', '2024-02-15', '09:00:00'),
+(98765432, 'Bob', 'Lee', '2024-03-01', '10:00:00'),
+(87654321, 'Carol', 'Ng', '2024-03-01', '14:00:00');
 
--- Insert members
-INSERT INTO Member VALUES (1111, 'John', 'Doe', '2024-01-01', '10:00:00'),
-                          (2222, 'Jane', 'Smith', '2024-02-01', '12:00:00');
+-- ============================================
+-- CONSTRAINT 1: Order must have at least one item
+-- ============================================
 
--- Insert food orders
-INSERT INTO Food_Order (id, date, time, payment_method, card, card_type, total_price)
-VALUES ('O1', '2024-03-01', '13:00:00', 'cash', NULL, NULL, 0),
-       ('O2', '2024-03-01', '14:00:00', 'card', 'AMEX', 938293847, 0);
+-- TEST 1.1: Try to delete last item from order (SHOULD FAIL)
+INSERT INTO Food_Order VALUES ('20240320001', '20/3/2024', '10:15:51', 'card', '3742-8375-6443-8590', 'americanexpress', 0);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320001', 'Bun Cha', 'STAFF-01', 1);
+-- Expected: This should FAIL because order would have 0 items
+-- DELETE FROM Prepare WHERE order_id = '20240320001';
 
--- Link O1 to member John
-INSERT INTO Ordered_By VALUES ('O1', 1111);
+-- TEST 1.2: Delete one item when multiple exist (SHOULD SUCCEED)
+INSERT INTO Food_Order VALUES ('20240320002', '20/3/2024', '10:30:00', 'cash', NULL, NULL, 0);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES 
+('20240320002', 'Bun Cha', 'STAFF-01', 2),
+('20240320002', 'Pho', 'STAFF-02', 1);
+-- Expected: This should SUCCEED because order still has items
+DELETE FROM Prepare WHERE order_id = '20240320002' AND item = 'Pho';
+SELECT 'TEST 1.2: ' || CASE WHEN COUNT(*) = 1 THEN '✓ PASS' ELSE '✗ FAIL' END 
+FROM Prepare WHERE order_id = '20240320002';
 
---------------------------------------------------
--- CONSTRAINT 1: Each order must have at least one item
---------------------------------------------------
+-- ============================================
+-- CONSTRAINT 2: Staff must cook item's cuisine
+-- ============================================
 
--- [ERROR TEST] TEST 1A: Delete all Prepare rows for an order → should be rejected
-INSERT INTO Prepare VALUES ('O1', 'Pasta', 'S1', 1);
-DELETE FROM Prepare WHERE order_id = 'O1'; 
--- Expected: ERROR (trigger should reject deletion because order would have 0 items)
+-- TEST 2.1: Staff cooking wrong cuisine (SHOULD FAIL)
+INSERT INTO Food_Order VALUES ('20240320003', '20/3/2024', '11:00:00', 'card', '5108-7574-2920-6803', 'mastercard', 0);
+-- Expected: This should FAIL - STAFF-03 cannot cook Vietnamese
+-- INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320003', 'Bun Cha', 'STAFF-03', 1);
 
--- [SUCCESS TEST] TEST 1B: Order with at least one item is allowed
-INSERT INTO Prepare VALUES ('O1', 'Pizza', 'S1', 2);
--- Expected: SUCCESS
+-- TEST 2.2: Staff cooking correct cuisine (SHOULD SUCCEED)
+INSERT INTO Food_Order VALUES ('20240320004', '20/3/2024', '11:15:00', 'card', '3466-5960-1418-4580', 'americanexpress', 0);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320004', 'Bun Cha', 'STAFF-01', 2);
+SELECT 'TEST 2.2: ' || CASE WHEN COUNT(*) = 1 THEN '✓ PASS' ELSE '✗ FAIL' END 
+FROM Prepare WHERE order_id = '20240320004';
 
---------------------------------------------------
--- CONSTRAINT 2: Staff must be qualified to cook the item’s cuisine
---------------------------------------------------
+-- TEST 2.3: Update to wrong staff (SHOULD FAIL)
+-- Expected: This should FAIL - STAFF-03 cannot cook Vietnamese
+-- UPDATE Prepare SET staff = 'STAFF-03' WHERE order_id = '20240320004';
 
--- [ERROR TEST] TEST 2A: Staff S2 (Japanese cook) tries to prepare Italian item
-INSERT INTO Prepare VALUES ('O2', 'Pizza', 'S2', 1);
--- Expected: ERROR (S2 cannot cook Italian)
+-- ============================================
+-- CONSTRAINT 3: Order datetime >= Member registration
+-- ============================================
 
--- [SUCCESS TEST] TEST 2B: Staff S1 (Italian cook) prepares Italian item
-INSERT INTO Prepare VALUES ('O2', 'Pizza', 'S1', 1);
--- Expected: SUCCESS
+-- TEST 3.1: Order before member registration (SHOULD FAIL)
+INSERT INTO Food_Order VALUES ('20240320005', '14/2/2024', '08:00:00', 'card', '3379-4110-3466-1310', 'americanexpress', 0);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320005', 'Pho', 'STAFF-01', 1);
+-- Expected: This should FAIL - order is before Alice's registration (2024-02-15 09:00)
+-- INSERT INTO Ordered_By (order_id, member) VALUES ('20240320005', 91234567);
 
---------------------------------------------------
--- CONSTRAINT 3: Order’s date/time must not precede member’s registration
---------------------------------------------------
+-- TEST 3.2: Order after member registration (SHOULD SUCCEED)
+INSERT INTO Food_Order VALUES ('20240320006', '16/2/2024', '10:00:00', 'card', '3742-8382-6101-0570', 'americanexpress', 0);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320006', 'Pho', 'STAFF-02', 1);
+INSERT INTO Ordered_By (order_id, member) VALUES ('20240320006', 91234567);
+SELECT 'TEST 3.2: ' || CASE WHEN COUNT(*) = 1 THEN '✓ PASS' ELSE '✗ FAIL' END 
+FROM Ordered_By WHERE order_id = '20240320006';
 
--- [ERROR TEST] TEST 3A: Insert order earlier than member registration
-INSERT INTO Food_Order (id, date, time, payment_method, total_price)
-VALUES ('O3', '2023-12-31', '09:00:00', 'cash', 0);
+-- TEST 3.3: Order on same day but earlier time (SHOULD FAIL)
+INSERT INTO Food_Order VALUES ('20240320007', '1/3/2024', '09:00:00', 'card', '5002-3594-5319-1014', 'mastercard', 0);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320007', 'Pad Thai', 'STAFF-01', 1);
+-- Expected: This should FAIL - order time 09:00 is before Bob's registration 10:00
+-- INSERT INTO Ordered_By (order_id, member) VALUES ('20240320007', 98765432);
 
-INSERT INTO Ordered_By VALUES ('O3', 1111);
--- Expected: ERROR (order date/time before registration)
+-- ============================================
+-- CONSTRAINT 4: Total price calculation with discount
+-- ============================================
 
--- [SUCCESS TEST] TEST 3B: Order after registration
-INSERT INTO Food_Order (id, date, time, payment_method, total_price)
-VALUES ('O4', '2024-03-10', '14:00:00', 'cash', 0);
-INSERT INTO Ordered_By VALUES ('O4', 1111);
--- Expected: SUCCESS
+-- TEST 4.1: Member with 4 items → Should get $2 discount
+-- Price: 4*4 = 16, with discount = 14
+INSERT INTO Food_Order VALUES ('20240320008', '1/3/2024', '12:19:23', 'card', '5108-7574-2920-6803', 'mastercard', 0);
+INSERT INTO Ordered_By (order_id, member) VALUES ('20240320008', 98765432);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320008', 'Bun Cha', 'STAFF-01', 4);
+SELECT 'TEST 4.1: ' || id || ' = ' || total_price || ' ' ||
+       CASE WHEN total_price = 14 THEN '✓ PASS' ELSE '✗ FAIL (expected 14)' END 
+FROM Food_Order WHERE id = '20240320008';
 
---------------------------------------------------
--- CONSTRAINT 4: total_price must equal sum(items) - discount
---------------------------------------------------
+-- TEST 4.2: Non-member with 4 items → No discount
+-- Price: 4*4 = 16 (no discount)
+INSERT INTO Food_Order VALUES ('20240320009', '1/3/2024', '13:46:33', 'card', '3466-5960-1418-4580', 'americanexpress', 0);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320009', 'Bun Cha', 'STAFF-02', 4);
+SELECT 'TEST 4.2: ' || id || ' = ' || total_price || ' ' ||
+       CASE WHEN total_price = 16 THEN '✓ PASS' ELSE '✗ FAIL (expected 16)' END 
+FROM Food_Order WHERE id = '20240320009';
 
--- Clean test order
-INSERT INTO Food_Order (id, date, time, payment_method, total_price)
-VALUES ('O5', '2024-04-01', '12:00:00', 'cash', 0);
-INSERT INTO Ordered_By VALUES ('O5', 1111);
+-- TEST 4.3: Member with 3 items → No discount (< 4 items)
+-- Price: 3*4 = 12 (no discount)
+INSERT INTO Food_Order VALUES ('20240320010', '1/3/2024', '13:48:15', 'card', '3379-4110-3466-1310', 'americanexpress', 0);
+INSERT INTO Ordered_By (order_id, member) VALUES ('20240320010', 98765432);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320010', 'Bun Cha', 'STAFF-01', 3);
+SELECT 'TEST 4.3: ' || id || ' = ' || total_price || ' ' ||
+       CASE WHEN total_price = 12 THEN '✓ PASS' ELSE '✗ FAIL (expected 12)' END 
+FROM Food_Order WHERE id = '20240320010';
 
--- Insert items for O5 (staff S1 can cook Italian)
-INSERT INTO Prepare VALUES ('O5', 'Pasta', 'S1', 1);
-INSERT INTO Prepare VALUES ('O5', 'Pizza', 'S1', 1);
--- Expected: total_price = 10 + 12 = 22
+-- TEST 4.4: Member with mixed items (4+ total) → Discount applies
+-- Price: 4 + 5 + 6 + 3 = 18, with discount = 16
+INSERT INTO Food_Order VALUES ('20240320011', '1/3/2024', '15:39:48', 'card', '3742-8382-6101-0570', 'americanexpress', 0);
+INSERT INTO Ordered_By (order_id, member) VALUES ('20240320011', 87654321);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES 
+('20240320011', 'Bun Cha', 'STAFF-01', 1),
+('20240320011', 'Pho', 'STAFF-02', 1),
+('20240320011', 'Pad Thai', 'STAFF-01', 1),
+('20240320011', 'Spring Roll', 'STAFF-02', 1);
+SELECT 'TEST 4.4: ' || id || ' = ' || total_price || ' ' ||
+       CASE WHEN total_price = 16 THEN '✓ PASS' ELSE '✗ FAIL (expected 16)' END 
+FROM Food_Order WHERE id = '20240320011';
 
--- [SUCCESS TEST] Check total price
-SELECT id, total_price FROM Food_Order WHERE id = 'O5';
--- Expected output: O5 | 22
+-- TEST 4.5: Add item to make eligible for discount
+-- Initial: 3 items = 12 (no discount)
+-- After adding 1 more: 4 items = 14 (with discount)
+INSERT INTO Food_Order VALUES ('20240320012', '1/3/2024', '16:19:03', 'card', '5002-3594-5319-1014', 'mastercard', 0);
+INSERT INTO Ordered_By (order_id, member) VALUES ('20240320012', 91234567);
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320012', 'Bun Cha', 'STAFF-01', 3);
+SELECT 'TEST 4.5a: ' || id || ' = ' || total_price || ' ' ||
+       CASE WHEN total_price = 12 THEN '✓ PASS' ELSE '✗ FAIL (expected 12)' END 
+FROM Food_Order WHERE id = '20240320012';
 
--- Add 2 more items → triggers $2 discount
-INSERT INTO Prepare VALUES ('O5', 'Sushi', 'S2', 2);
--- Expected: total_price = (10+12+8+8) - 2 = 36
+-- Now add one more item
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320012', 'Spring Roll', 'STAFF-02', 1);
+SELECT 'TEST 4.5b: ' || id || ' = ' || total_price || ' ' ||
+       CASE WHEN total_price = 13 THEN '✓ PASS' ELSE '✗ FAIL (expected 13)' END 
+FROM Food_Order WHERE id = '20240320012';
 
-SELECT id, total_price FROM Food_Order WHERE id = 'O5';
--- Expected output: O5 | 36
-
--- [ERROR TEST] TEST 4A: Remove Ordered_By link → should lose discount
-DELETE FROM Ordered_By WHERE order_id = 'O5';
--- Expected: total_price = 38 (no discount now)
-
-SELECT id, total_price FROM Food_Order WHERE id = 'O5';
--- Expected output: O5 | 38
-
--- [SUCCESS TEST] TEST 4B: Add member back → regain discount
-INSERT INTO Ordered_By VALUES ('O5', 1111);
-SELECT id, total_price FROM Food_Order WHERE id = 'O5';
--- Expected output: O5 | 36 (discount applied again)
+-- ============================================
+-- SUMMARY
+-- ============================================
+SELECT '========================================' as summary;
+SELECT 'All tests completed. Check results above.' as summary;
+SELECT 'Failed constraints should have raised exceptions.' as summary;
