@@ -35,22 +35,44 @@ INSERT INTO Member (phone, firstname, lastname, reg_date, reg_time) VALUES
 -- ============================================
 -- CONSTRAINT 1: Order must have at least one item
 -- ============================================
+--------------------------------------------------
+-- CONSTRAINT 1: Each order must have at least one item
+--------------------------------------------------
+INSERT INTO Food_Order VALUES ('20251020123', '20/10/2025', '20:56:01', 'cash', NULL, NULL, '12'); 
+INSERT INTO Prepare VALUES ('20251020123', 'Rendang', 'STAFF-01', '1');
+INSERT INTO Prepare VALUES ('20251020123', 'Ayam Balado', 'STAFF-03', '2');
 
--- TEST 1.1: Try to delete last item from order (SHOULD FAIL)
-INSERT INTO Food_Order VALUES ('20240320001', '20/3/2024', '10:15:51', 'card', '3742-8375-6443-8590', 'americanexpress', 0);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320001', 'Bun Cha', 'STAFF-01', 1);
--- Expected: This should FAIL because order would have 0 items
--- DELETE FROM Prepare WHERE order_id = '20240320001';
-
--- TEST 1.2: Delete one item when multiple exist (SHOULD SUCCEED)
-INSERT INTO Food_Order VALUES ('20240320002', '20/3/2024', '10:30:00', 'cash', NULL, NULL, 0);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES 
-('20240320002', 'Bun Cha', 'STAFF-01', 2),
-('20240320002', 'Pho', 'STAFF-02', 1);
--- Expected: This should SUCCEED because order still has items
-DELETE FROM Prepare WHERE order_id = '20240320002' AND item = 'Pho';
-SELECT 'TEST 1.2: ' || CASE WHEN COUNT(*) = 1 THEN '✓ PASS' ELSE '✗ FAIL' END 
-FROM Prepare WHERE order_id = '20240320002';
+SELECT *
+FROM Food_Order
+WHERE id = '20251020123'
+;
+SELECT *
+FROM Prepare
+WHERE order_id = '20251020123'
+ORDER BY item
+;
+-- Records will be deleted from Food_Order and Prepare tables due to ON DELETE CASCADE
+DELETE FROM Food_Order
+WHERE id = '20251020123'
+; 
+-- Deletion will fail due to trigger
+DELETE FROM Prepare
+WHERE order_id = '20251020123'
+; 
+-- Update will fail due to check constraint
+UPDATE Prepare
+SET qty = 0
+WHERE order_id = '20251020123'
+and item = 'Rendang'
+and staff = 'STAFF-01'
+; 
+-- Deletion will be executed and total_price will be re-computed with trg_update_total_price trigger on Prepare
+-- total_price is updated from 12 to 8
+DELETE FROM Prepare
+WHERE order_id = '20251020123'
+and item = 'Rendang'
+and staff = 'STAFF-01'
+; 
 
 -- ============================================
 -- CONSTRAINT 2: Staff must cook item's cuisine
