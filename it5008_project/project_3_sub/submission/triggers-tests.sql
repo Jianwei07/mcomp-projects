@@ -120,25 +120,33 @@ DELETE FROM Cook WHERE staff='STAFF-04' AND cuisine='Indonesian';
 -- TEST 3.1: Order before member registration (SHOULD FAIL)
 BEGIN; -- Start a transaction
 
--- Test 1: Create an order on Jan 1st, 2024 (BEFORE the Jan 3rd registration)
+-- Create an order on Jan 1st, 2024 (BEFORE the Jan 3rd registration)
 INSERT INTO Food_Order VALUES ('20240101001', '2024-01-01', '10:00:00', 'cash', NULL, NULL, 0);
 
--- Test 2: Link it to member '93627414'
+-- Link it to member '93627414'
 INSERT INTO Ordered_By (order_id, member) VALUES ('20240101001', '93627414');
 
--- Test 3: Try to commit the transaction
--- This COMMIT line is what will fail and roll back the transaction
+-- Try to commit the transaction
 COMMIT;
 
 -- Error Message: ERROR:  Invalid order - Order on 2024-01-01 10:00:00 is before member registration on 2024-01-03 12:19:23
 -- CONTEXT:  PL/pgSQL function order_member() line 17 at RAISE SQL state: P0001
 
 -- TEST 3.2: Order after member registration (SHOULD SUCCEED)
-INSERT INTO Food_Order VALUES ('20240320006', '16/2/2024', '10:00:00', 'card', '3742-8382-6101-0570', 'americanexpress', 0);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320006', 'Pho', 'STAFF-02', 1);
-INSERT INTO Ordered_By (order_id, member) VALUES ('20240320006', 91234567);
-SELECT 'TEST 3.2: ' || CASE WHEN COUNT(*) = 1 THEN '✓ PASS' ELSE '✗ FAIL' END 
-FROM Ordered_By WHERE order_id = '20240320006';
+BEGIN;
+
+-- This order is on the SAME DAY (Jan 3) as registration,
+-- but at a LATER TIME (14:00:00) than registration (12:19:23)
+INSERT INTO Food_Order VALUES ('20240103002', '2024-01-03', '14:00:00', 'card', '2222-3333-4444-5555', 'mastercard', 0);
+
+-- Link the order to member '93627414'
+INSERT INTO Ordered_By (order_id, member) VALUES ('20240103002', '93627414');
+
+-- Add an item to the order
+INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240103002', 'Bun Cha', 'STAFF-03', 1);
+
+-- This COMMIT will execute the deferred trigger and should SUCCEED.
+COMMIT;
 
 -- TEST 3.3: Order on same day but earlier time (SHOULD FAIL)
 BEGIN;
