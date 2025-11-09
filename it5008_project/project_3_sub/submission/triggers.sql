@@ -2,7 +2,7 @@
 -- CONSTRAINT 1: Each order must have at least one item
 --------------------------------------------------
 
---If someone deletes from prepare, check that the order has at least one item
+DROP FUNCTION IF EXISTS check_order_min_items();
 CREATE OR REPLACE FUNCTION check_order_min_items()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -11,11 +11,11 @@ BEGIN
             RAISE EXCEPTION 'Constraint 1 Violation: Order % must have at least one item.', OLD.order_id;
         END IF;
     END IF;
-    RETURN NEW;
+    RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger 1.1: Prevents deleting the last item from an existing order.
+DROP TRIGGER IF EXISTS trg_check_prepare_delete_min_items ON Prepare;
 CREATE TRIGGER trg_check_prepare_delete_min_items
 AFTER DELETE ON Prepare
 FOR EACH ROW
@@ -25,7 +25,7 @@ EXECUTE FUNCTION check_order_min_items();
 -- CONSTRAINT 2: Staff must be qualified to cook the item’s cuisine
 --------------------------------------------------
 
---If someone inserts or updates prepare, check if staff can indeed cook that cuisine
+DROP FUNCTION IF EXISTS check_staff_can_cook();
 CREATE OR REPLACE FUNCTION check_staff_can_cook()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -37,21 +37,20 @@ BEGIN
         SELECT 1 FROM Cook
         WHERE staff = NEW.staff AND cuisine = item_cuisine
     ) THEN
-        RAISE EXCEPTION
-        'Staff % cannot cook cuisine % for item %',
-        NEW.staff, item_cuisine, NEW.item;
+        RAISE EXCEPTION 'Staff % cannot cook cuisine % for item %', NEW.staff, item_cuisine, NEW.item;
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_check_staff_can_cook ON Prepare;
 CREATE TRIGGER trg_check_staff_can_cook
 BEFORE INSERT OR UPDATE ON Prepare
 FOR EACH ROW
 EXECUTE FUNCTION check_staff_can_cook();
 
---If someone deletes from Cook, the existing Prepare entries might now reference staff who can no longer cook that cuisine.
+DROP FUNCTION IF EXISTS prevent_cook_delete();
 CREATE OR REPLACE FUNCTION prevent_cook_delete()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -60,17 +59,19 @@ BEGIN
         JOIN Item i ON p.item = i.name
         WHERE p.staff = OLD.staff AND i.cuisine = OLD.cuisine
     ) THEN
-        RAISE EXCEPTION 'Cannot delete Cook record for %, still preparing % dishes', OLD.staff, OLD.cuisine;
+        RAISE EXCEPTION 'Cannot delete Cook record for % %, still preparing % dishes', OLD.staff, OLD.cuisine;
     END IF;
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_prevent_cook_delete ON Cook;
 CREATE TRIGGER trg_prevent_cook_delete
 BEFORE DELETE ON Cook
-FOR EACH ROW EXECUTE FUNCTION prevent_cook_delete();
+FOR EACH ROW
+EXECUTE FUNCTION prevent_cook_delete();
 
---If an item’s cuisine changes, some Prepare records may now point to a staff who can’t cook the new cuisine.
+DROP FUNCTION IF EXISTS check_item_cuisine_update();
 CREATE OR REPLACE FUNCTION check_item_cuisine_update()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -82,18 +83,17 @@ BEGIN
               SELECT 1
               FROM Cook c
               WHERE c.staff = p.staff
-              AND c.cuisine = NEW.cuisine
+                AND c.cuisine = NEW.cuisine
           )
     ) THEN
-        RAISE EXCEPTION
-        'Changing cuisine of item % to % causes invalid staff assignments.',
-        OLD.name, NEW.cuisine;
+        RAISE EXCEPTION 'Changing cuisine of item % to % causes invalid staff assignments.', OLD.name, NEW.cuisine;
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_check_item_cuisine_update ON Item;
 CREATE TRIGGER trg_check_item_cuisine_update
 BEFORE UPDATE OF cuisine ON Item
 FOR EACH ROW
@@ -102,6 +102,7 @@ EXECUTE FUNCTION check_item_cuisine_update();
 --------------------------------------------------
 -- CONSTRAINT 3: Order’s date/time must not precede member’s registration
 --------------------------------------------------
+
 DROP FUNCTION IF EXISTS order_member();
 CREATE OR REPLACE FUNCTION order_member()
 RETURNS TRIGGER AS $$
@@ -109,31 +110,30 @@ DECLARE
  v_reg_datetime TIMESTAMP;
  v_order_datetime TIMESTAMP;
 BEGIN
- select reg_date + reg_time INTO v_reg_datetime
+ SELECT reg_date + reg_time INTO v_reg_datetime
  FROM Member a
  WHERE a.phone = NEW.member
- ;
- select date + time INTO v_order_datetime
+ LIMIT 1;
+
+ SELECT date + time INTO v_order_datetime
  FROM Food_Order b
  WHERE b.id = NEW.order_id
- ;
+ LIMIT 1;
+
  IF v_order_datetime < v_reg_datetime THEN
   RAISE EXCEPTION 'Invalid order - Order on % is before member registration on %', v_order_datetime, v_reg_datetime;
  END IF;
 
- RAISE NOTICE 'Valid order - Order on % is after member registration on %', v_order_datetime, v_reg_datetime;
  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS order_member_trigger on ordered_by;
+DROP TRIGGER IF EXISTS order_member_trigger ON ordered_by;
 CREATE CONSTRAINT TRIGGER order_member_trigger
 AFTER INSERT OR UPDATE ON ordered_by
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
-EXECUTE PROCEDURE order_member()
-;
-
+EXECUTE FUNCTION order_member();
 
 DROP FUNCTION IF EXISTS order_date();
 CREATE OR REPLACE FUNCTION order_date()
@@ -142,37 +142,28 @@ DECLARE
  v_reg_datetime TIMESTAMP;
  v_order_datetime TIMESTAMP;
 BEGIN
- SELECT (a.date + a.time), (c.reg_date, c.reg_time) INTO v_order_datetime, v_reg_datetime
- FROM food_order a, ordered_by b, member c
- WHERE a.id = b.order_id
- AND b.member = c.phone
- AND a.id = OLD.id
- ORDER BY (a.date + a.time)
- LIMIT 1
- ;
- IF v_order_datetime < v_reg_datetime
-  THEN RAISE EXCEPTION 'Order date cannot be updated to % as it lies before member registration date %', v_order_datetime, v_reg_datetime;
+ SELECT a.date + a.time, c.reg_date + c.reg_time
+ INTO v_order_datetime, v_reg_datetime
+ FROM food_order a
+ JOIN ordered_by b ON a.id = b.order_id
+ JOIN member c ON b.member = c.phone
+ WHERE a.id = OLD.id
+ ORDER BY a.date + a.time
+ LIMIT 1;
+
+ IF v_order_datetime < v_reg_datetime THEN
+  RAISE EXCEPTION 'Order date cannot be updated to % as it lies before member registration date %', v_order_datetime, v_reg_datetime;
  END IF;
  RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS order_date_trigger on food_order;
+DROP TRIGGER IF EXISTS order_date_trigger ON food_order;
 CREATE CONSTRAINT TRIGGER order_date_trigger
-AFTER UPDATE ON food_order -- Don't need AFTER DELETE because they will be blocked by FK constraints anyway
+AFTER UPDATE ON food_order
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
-EXECUTE PROCEDURE order_date()
-;
-
-
-SELECT (a.date + a.time), (c.reg_date, c.reg_time) 
-FROM food_order a, ordered_by b, member c
-WHERE a.id = b.order_id
-AND b.member = c.phone
-AND c.phone = '93627414'
-ORDER BY (a.date + a.time)
-;
+EXECUTE FUNCTION order_date();
 
 DROP FUNCTION IF EXISTS reg_date();
 CREATE OR REPLACE FUNCTION reg_date()
@@ -181,28 +172,28 @@ DECLARE
  v_reg_datetime TIMESTAMP;
  v_order_datetime TIMESTAMP;
 BEGIN
- SELECT (a.date + a.time), (c.reg_date, c.reg_time) INTO v_order_datetime, v_reg_datetime
- FROM food_order a, ordered_by b, member c
- WHERE a.id = b.order_id
- AND b.member = c.phone
- AND c.phone = OLD.phone
- ORDER BY (a.date + a.time)
- LIMIT 1
- ;
- IF v_order_datetime < v_reg_datetime  
-  THEN RAISE EXCEPTION 'Member registration date cannot be updated to % as it lies after order date %', v_reg_datetime, v_order_datetime;
+ SELECT a.date + a.time, c.reg_date + c.reg_time
+ INTO v_order_datetime, v_reg_datetime
+ FROM food_order a
+ JOIN ordered_by b ON a.id = b.order_id
+ JOIN member c ON b.member = c.phone
+ WHERE c.phone = OLD.phone
+ ORDER BY a.date + a.time
+ LIMIT 1;
+
+ IF v_order_datetime < v_reg_datetime THEN
+  RAISE EXCEPTION 'Member registration date cannot be updated to % as it lies after order date %', v_reg_datetime, v_order_datetime;
  END IF;
  RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS reg_date_trigger on member;
+DROP TRIGGER IF EXISTS reg_date_trigger ON member;
 CREATE CONSTRAINT TRIGGER reg_date_trigger
 AFTER UPDATE ON member
 DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
-EXECUTE PROCEDURE reg_date()
-;
+EXECUTE FUNCTION reg_date();
 
 --------------------------------------------------
 -- CONSTRAINT 4: total_price must equal sum(items) - discount
