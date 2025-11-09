@@ -71,24 +71,46 @@ and item = 'Rendang'
 and staff = 'STAFF-01'
 ; 
 
--- ============================================
--- CONSTRAINT 2: Staff must cook item's cuisine
--- ============================================
 
--- TEST 2.1: Staff cooking wrong cuisine (SHOULD FAIL)
-INSERT INTO Food_Order VALUES ('20240320003', '20/3/2024', '11:00:00', 'card', '5108-7574-2920-6803', 'mastercard', 0);
--- Expected: This should FAIL - STAFF-03 cannot cook Vietnamese
--- INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320003', 'Bun Cha', 'STAFF-03', 1);
 
--- TEST 2.2: Staff cooking correct cuisine (SHOULD SUCCEED)
-INSERT INTO Food_Order VALUES ('20240320004', '20/3/2024', '11:15:00', 'card', '3466-5960-1418-4580', 'americanexpress', 0);
-INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320004', 'Bun Cha', 'STAFF-01', 2);
-SELECT 'TEST 2.2: ' || CASE WHEN COUNT(*) = 1 THEN '✓ PASS' ELSE '✗ FAIL' END 
-FROM Prepare WHERE order_id = '20240320004';
+-- Tests for Constraint 2: Staff must be qualified to cook the item's cuisine
 
--- TEST 2.3: Update to wrong staff (SHOULD FAIL)
--- Expected: This should FAIL - STAFF-03 cannot cook Vietnamese
--- UPDATE Prepare SET staff = 'STAFF-03' WHERE order_id = '20240320004';
+-- 1. Valid insert (should pass)
+INSERT INTO Prepare VALUES ('20240520001', 'Rendang', 'STAFF-01', 1);
+SELECT * FROM Prepare WHERE order_id='20240520001';
+
+-- 2. Invalid insert (should fail: STAFF-02 not qualified for Indonesian)
+INSERT INTO Prepare VALUES ('20240520002', 'Rendang', 'STAFF-02', 1);
+
+-- 3. Valid update to another qualified staff (STAFF-03)
+UPDATE Prepare SET staff='STAFF-03'
+WHERE order_id='20240520001' AND item='Rendang';
+SELECT * FROM Prepare WHERE order_id='20240520001';
+
+-- 4. Valid delete from Cook (not preparing that cuisine)
+DELETE FROM Cook WHERE staff='STAFF-12' AND cuisine='German';
+SELECT * FROM Cook WHERE staff='STAFF-12' AND cuisine='German';
+
+-- 5. Invalid delete from Cook (staff still preparing Indonesian)
+DELETE FROM Cook WHERE staff='STAFF-03' AND cuisine='Indonesian';
+
+-- 6. Invalid item cuisine update (staff can’t cook new cuisine)
+UPDATE Item SET cuisine='German' WHERE name='Rendang';
+
+-- 7. Valid cuisine update after adding qualification
+INSERT INTO Cook VALUES ('STAFF-06', 'Indian');
+UPDATE Item SET cuisine='Indian' WHERE name='Palak Paneer';
+SELECT name, cuisine FROM Item WHERE name='Palak Paneer';
+
+-- EC1: Staff-01 (Indonesian) now prepares Palak Paneer (Indian)
+UPDATE Prepare
+SET item = 'Palak Paneer'
+WHERE order_id='20240520001' AND staff='STAFF-01';
+-- should fail, since STAFF-01 not qualified for Indian
+
+-- STAFF-04 can cook both Indonesian and German - Should fail can't delete
+DELETE FROM Cook WHERE staff='STAFF-04' AND cuisine='Indonesian';
+
 
 -- ============================================
 -- CONSTRAINT 3: Order datetime >= Member registration

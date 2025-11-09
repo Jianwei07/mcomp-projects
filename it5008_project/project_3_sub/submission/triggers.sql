@@ -16,9 +16,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_check_prepare_delete_min_items ON Prepare;
-CREATE CONSTRAINT TRIGGER trg_check_prepare_delete_min_items
+CREATE TRIGGER trg_check_prepare_delete_min_items
 AFTER DELETE ON Prepare
-DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW
 EXECUTE FUNCTION check_order_min_items();
 
@@ -39,6 +38,7 @@ BEGIN
         WHERE staff = NEW.staff AND cuisine = item_cuisine
     ) THEN
         RAISE EXCEPTION 'Staff % cannot cook cuisine % for item %', NEW.staff, item_cuisine, NEW.item;
+
     END IF;
 
     RETURN NEW;
@@ -56,11 +56,14 @@ CREATE OR REPLACE FUNCTION prevent_cook_delete()
 RETURNS TRIGGER AS $$
 BEGIN
     IF EXISTS (
-        SELECT 1 FROM Prepare p
+        SELECT 1
+        FROM Prepare p
         JOIN Item i ON p.item = i.name
         WHERE p.staff = OLD.staff AND i.cuisine = OLD.cuisine
     ) THEN
-        RAISE EXCEPTION 'Cannot delete Cook record for % %, still preparing % dishes', OLD.staff, OLD.cuisine;
+        RAISE EXCEPTION 
+            'Cannot modify Cook record for % %, still preparing dishes',
+            OLD.staff, OLD.cuisine;
     END IF;
     RETURN OLD;
 END;
