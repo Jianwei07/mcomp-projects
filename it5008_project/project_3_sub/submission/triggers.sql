@@ -37,7 +37,7 @@ BEGIN
         SELECT 1 FROM Cook
         WHERE staff = NEW.staff AND cuisine = item_cuisine
     ) THEN
-        RAISE EXCEPTION 'Staff % cannot cook cuisine % for item %', NEW.staff, item_cuisine, NEW.item;
+        RAISE EXCEPTION 'Constraint 2 Violation: Staff % cannot cook cuisine % for item %', NEW.staff, item_cuisine, NEW.item;
 
     END IF;
 
@@ -62,7 +62,7 @@ BEGIN
         WHERE p.staff = OLD.staff AND i.cuisine = OLD.cuisine
     ) THEN
         RAISE EXCEPTION 
-            'Cannot modify Cook record for % %, still preparing dishes',
+            'Constraint 2 Violation: Cannot modify Cook record for % %, still preparing dishes',
             OLD.staff, OLD.cuisine;
     END IF;
     RETURN OLD;
@@ -90,7 +90,7 @@ BEGIN
                 AND c.cuisine = NEW.cuisine
           )
     ) THEN
-        RAISE EXCEPTION 'Changing cuisine of item % to % causes invalid staff assignments.', OLD.name, NEW.cuisine;
+        RAISE EXCEPTION 'Constraint 2 Violation: Changing cuisine of item % to % causes invalid staff assignments.', OLD.name, NEW.cuisine;
     END IF;
 
     RETURN NEW;
@@ -125,7 +125,7 @@ BEGIN
     LIMIT 1;
 
     IF v_order_datetime < v_reg_datetime THEN
-        RAISE EXCEPTION 'Invalid order - Order on % is before member registration on %', v_order_datetime, v_reg_datetime;
+        RAISE EXCEPTION 'Constraint 3 Violation: Invalid order - Order on % is before member registration on %', v_order_datetime, v_reg_datetime;
     END IF;
 
     RETURN NEW;
@@ -156,7 +156,7 @@ BEGIN
     LIMIT 1;
 
     IF v_order_datetime < v_reg_datetime THEN
-        RAISE EXCEPTION 'Order date cannot be updated to % as it lies before member registration date %', v_order_datetime, v_reg_datetime;
+        RAISE EXCEPTION 'Constraint 3 Violation: Order date cannot be updated to % as it lies before member registration date %', v_order_datetime, v_reg_datetime;
     END IF;
     RETURN OLD;
 END;
@@ -186,7 +186,7 @@ BEGIN
     LIMIT 1;
 
     IF v_order_datetime < v_reg_datetime THEN
-        RAISE EXCEPTION 'Member registration date cannot be updated to % as it lies after order date %', v_reg_datetime, v_order_datetime;
+        RAISE EXCEPTION 'Constraint 3 Violation: Member registration date cannot be updated to % as it lies after order date %', v_reg_datetime, v_order_datetime;
     END IF;
     RETURN OLD;
 END;
@@ -204,6 +204,7 @@ EXECUTE FUNCTION reg_date();
 --------------------------------------------------
 
 --If someone inserts, updates, or deletes from Prepare or from Ordered_By, recalcualte the total price (with discounts if applies).
+--Constraint is reinforced by recalculating when neccessary instead of raising exception
 CREATE OR REPLACE FUNCTION update_order_total_price()
 RETURNS TRIGGER AS $$
 DECLARE
