@@ -83,7 +83,7 @@ INSERT INTO Prepare VALUES ('20251108789', 'Rinderrouladen', 'STAFF-03', '2');
 -- ============================================================
 -- TEST 3.1: Order before member registration (SHOULD FAIL)
 BEGIN; -- Start a transaction
--- Create an order on Jan 1st, 2024 (BEFORE the Jan 3rd registration)
+-- Create an order on 1st Jan 2024 (BEFORE the 1st Mar 2024 registration)
 INSERT INTO Food_Order VALUES ('20240101001', '2024-01-01', '10:00:00', 'cash', NULL, NULL, 0);
 -- Link it to member '93627414'
 INSERT INTO Ordered_By (order_id, member) VALUES ('20240101001', '93627414');
@@ -95,7 +95,7 @@ COMMIT;
 
 -- TEST 3.2: Order after member registration (SHOULD SUCCEED)
 BEGIN;
--- This order is on the SAME DAY (1 Mar) as registration,
+-- This order is on the SAME DAY (1st Mar 2024) as registration,
 -- but at a LATER TIME (14:00:00) than registration (12:19:23)
 INSERT INTO Food_Order VALUES ('20240103002', '2024-03-01', '14:00:00', 'card', '2222-3333-4444-5555', 'mastercard', 0);
 -- Link the order to member '93627414'
@@ -108,7 +108,7 @@ COMMIT;
 
 -- TEST 3.3: Order on same day but earlier time (SHOULD FAIL)
 BEGIN;
--- This order is on the SAME DAY (1 Mar) as registration,
+-- This order is on the SAME DAY (1st Mar 2024) as registration,
 -- but at an EARLIER TIME (10:00:00) than registration (12:19:23)
 INSERT INTO Food_Order VALUES ('20240103001', '2024-03-01', '10:00:00', 'card', '1111-2222-3333-4444', 'visa', 0);
 -- Link the order to member '93627414'
