@@ -1,7 +1,7 @@
 -- ============================================================
 -- CONSTRAINT 1: Each order must have at least one item
 -- ============================================================
-INSERT INTO Food_Order VALUES ('20251020123', '20/10/2025', '20:56:01', 'cash', NULL, NULL, '12'); 
+INSERT INTO Food_Order VALUES ('20251020123', '2025-10-20', '20:56:01', 'cash', NULL, NULL, '12'); 
 INSERT INTO Prepare VALUES ('20251020123', 'Rendang', 'STAFF-01', '1');
 INSERT INTO Prepare VALUES ('20251020123', 'Ayam Balado', 'STAFF-03', '2');
 
@@ -46,7 +46,7 @@ WHERE id = '20251020123'
 -- CONSTRAINT 2: Staff must be qualified to cook the item’s cuisine
 -- ============================================================
 -- Test 1 - Works
-INSERT INTO Food_Order VALUES ('20251108456', '08/11/2025', '12:30:01', 'cash', NULL, NULL, '7.0'); 
+INSERT INTO Food_Order VALUES ('20251108456', '2025-11-08', '12:30:01', 'cash', NULL, NULL, '7.0'); 
 INSERT INTO Prepare VALUES ('20251108456', 'Rinderrouladen', 'STAFF-01', '2');
 
 select *
@@ -74,7 +74,7 @@ WHERE name = 'Rinderrouladen'
 ; -- Cuisine of each item should not be able to be updated
 
 -- Test 2 - Don't work (STAFF-03 doesn't know German cuisine)
-INSERT INTO Food_Order VALUES ('20251108789', '08/11/2025', '13:30:01', 'cash', NULL, NULL, '7.0'); 
+INSERT INTO Food_Order VALUES ('20251108789', '2025-11-08', '13:30:01', 'cash', NULL, NULL, '7.0'); 
 INSERT INTO Prepare VALUES ('20251108789', 'Rinderrouladen', 'STAFF-03', '2');
 
 
@@ -130,7 +130,7 @@ COMMIT;
 -- Insert order by a member with qty >= 4 with correct price
 -- Can input 0 as total_price because this will be auto re-computed by the trg_update_total_price trigger
 -- Correct total_price of 17 is computed (2x3.5 + 3x4 - 2 = 17)
-INSERT INTO Food_Order VALUES ('20251111123', '11/11/2025', '19:36:21', 'cash', NULL, NULL, 0); 
+INSERT INTO Food_Order VALUES ('20251111123', '2025-11-11', '19:36:21', 'cash', NULL, NULL, 0); 
 INSERT INTO Prepare VALUES ('20251111123', 'Rinderrouladen', 'STAFF-01', '2'); 
 INSERT INTO Prepare VALUES ('20251111123', 'Ayam Balado', 'STAFF-01', '3'); 
 INSERT INTO Ordered_By VALUES ('20251111123', '93627414');
@@ -174,7 +174,7 @@ where id = '20251111123'
 -- TEST 3: Non-member with 4 items → No discount
 -- Price: 4*4 = 16 (no discount)
 -- Correct total_price of 12 is computed (4x3 = 12)
-INSERT INTO Food_Order VALUES ('20240320009', '1/3/2024', '13:46:33', 'card', '3466-5960-1418-4580', 'americanexpress', 0);
+INSERT INTO Food_Order VALUES ('20240320009', '2024-03-01', '13:46:33', 'card', '3466-5960-1418-4580', 'americanexpress', 0);
 INSERT INTO Prepare (order_id, item, staff, qty) VALUES ('20240320009', 'Bun Cha', 'STAFF-03', 4);
 
 SELECT *
